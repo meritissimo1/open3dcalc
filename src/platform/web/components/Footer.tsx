@@ -40,7 +40,7 @@ export function Footer({
             ·
           </span>
           <a
-            href="https://github.com/ils15/open3dcalc"
+            href="https://github.com/meritissimo1/open3dcalc"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-[var(--color-text-secondary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none px-1 rounded"

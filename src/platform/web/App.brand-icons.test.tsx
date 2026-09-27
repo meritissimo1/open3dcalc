@@ -12,7 +12,7 @@ describe("SecondaryNavigation brand icons", () => {
     // BookOpen/Info SVGs before these links, so a positional
     // querySelectorAll("svg") would pick those up instead of the brand marks.
     const githubLink = container.querySelector(
-      'a[href="https://github.com/ils15/open3dcalc"]',
+      'a[href="https://github.com/meritissimo1/open3dcalc"]',
     );
     const telegramLink = container.querySelector(
       'a[href="https://t.me/Impressao3DBR"]',

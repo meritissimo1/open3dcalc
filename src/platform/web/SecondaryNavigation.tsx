@@ -41,7 +41,7 @@ export function SecondaryNavigation({
           </button>
         </li>
         <li>
-          <a href="https://github.com/ils15/open3dcalc" target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={itemClass} aria-label={t("footer.github")}>
+          <a href="https://github.com/meritissimo1/open3dcalc" target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={itemClass} aria-label={t("footer.github")}>
             <BrandIcon brand="github" className="w-[18px] h-[18px] shrink-0" />
             <span>{t("footer.github")}</span>
           </a>

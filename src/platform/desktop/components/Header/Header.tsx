@@ -113,7 +113,7 @@ export function Header() {
             </svg>
           </a>
           <a
-            href="https://github.com/ils15/open3dcalc"
+            href="https://github.com/meritissimo1/open3dcalc"
             target="_blank"
             rel="noopener noreferrer"
             className="p-2.5 lg:p-3 text-[var(--color-text-secondary)] hover:text-white hover:bg-[var(--color-bg-hover)] rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"

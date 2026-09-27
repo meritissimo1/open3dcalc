@@ -438,7 +438,7 @@ describe("focus mode — the z-50 audit can derive its own inputs", () => {
     ]) {
       const source = fs.readFileSync(resolve(process.cwd(), file), "utf8");
       expect(
-        stripComments(source).includes("https://github.com/ils15/open3dcalc"),
+        stripComments(source).includes("https://github.com/meritissimo1/open3dcalc"),
         `${file} has its href truncated by the comment strip, so any z-50 later ` +
           `on that line would be discarded`,
       ).toBe(true);

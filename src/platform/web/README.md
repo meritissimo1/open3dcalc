@@ -23,6 +23,6 @@ npm run build:web  # outputs to dist-web/
 ## Deployment
 
 Auto-deployed to GitHub Pages on push to `main`:
-**https://ils15.github.io/open3dcalc/**
+**https://meritissimo1.github.io/open3dcalc/**
 
 Manual: `npm run build:web` + upload `dist-web/` to any static host.

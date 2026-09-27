@@ -133,7 +133,7 @@ describe("desktop App shell (post-extraction)", () => {
       desktopSidebar!.querySelector('[data-testid="secondary-navigation"]'),
     ).toBeNull();
     const github = desktopSidebar!.querySelector(
-      'a[href="https://github.com/ils15/open3dcalc"]',
+      'a[href="https://github.com/meritissimo1/open3dcalc"]',
     );
     const telegram = desktopSidebar!.querySelector(
       'a[href="https://t.me/Impressao3DBR"]',

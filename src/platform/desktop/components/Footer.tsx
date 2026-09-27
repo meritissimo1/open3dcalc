@@ -8,7 +8,7 @@ export function Footer(): React.ReactElement {
     <footer className="hidden lg:block text-center text-xs text-[var(--color-text-muted)] py-3 border-t border-[var(--color-border)]">
       <div className="flex items-center justify-center gap-3">
         <a
-          href="https://github.com/ils15/open3dcalc"
+          href="https://github.com/meritissimo1/open3dcalc"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-[var(--color-text-secondary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none px-1 rounded"

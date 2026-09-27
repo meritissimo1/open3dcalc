@@ -195,7 +195,7 @@ export function ChangelogPage() {
       <div className="surface space-y-3 rounded-xl p-5 text-center">
         <p className="text-xs text-[var(--color-text-secondary)]">
           <a
-            href="https://github.com/ils15/open3dcalc/releases"
+            href="https://github.com/meritissimo1/open3dcalc/releases"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex max-w-full items-center break-words text-[var(--color-accent)] transition-colors hover:text-[var(--color-accent)]"
@@ -205,7 +205,7 @@ export function ChangelogPage() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[var(--color-text-secondary)]">
           <a
-            href="https://github.com/ils15/open3dcalc"
+            href="https://github.com/meritissimo1/open3dcalc"
             target="_blank"
             rel="noopener noreferrer"
             className="break-words transition-colors hover:text-[var(--color-text-primary)]"

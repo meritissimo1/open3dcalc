@@ -98,7 +98,7 @@ vi.mock("react-i18next", () => ({
 import App from "@/platform/desktop/App";
 
 /** The sidebar footer's brand link — the desktop-only chrome under test. */
-const GITHUB_LINK = 'a[href="https://github.com/ils15/open3dcalc"]';
+const GITHUB_LINK = 'a[href="https://github.com/meritissimo1/open3dcalc"]';
 
 beforeEach(() => {
   resetManifestForTests(manifestFixture as ManifestDocument);

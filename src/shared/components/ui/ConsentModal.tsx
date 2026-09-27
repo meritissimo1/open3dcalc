@@ -216,12 +216,12 @@ function PrivacyPolicyContent({ onBack }: { onBack: () => void }) {
           Desenvolvido por @ils15. Para questões de privacidade, abra uma issue
           em{" "}
           <a
-            href="https://github.com/ils15/open3dcalc"
+            href="https://github.com/meritissimo1/open3dcalc"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--color-accent)] hover:text-[var(--color-accent-light)] underline underline-offset-2"
           >
-            github.com/ils15/open3dcalc
+            github.com/meritissimo1/open3dcalc
           </a>
         </p>
       </Section>
