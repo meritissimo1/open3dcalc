@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { PrinterTagEditor } from "@/shared/components/Catalog/PrinterTagEditor";
 import { SupplyManager } from "@/shared/components/Catalog/SupplyManager";
+import { LaborManager } from "@/shared/components/Catalog/LaborManager";
 import { InputGroup } from "@/shared/components/ui/InputGroup";
 import { Select } from "@/shared/components/ui/Select";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
@@ -13,7 +14,12 @@ import { Pencil, X } from "lucide-react";
 import { useCurrency } from "@/shared/hooks/useCurrency";
 
 type Section =
-  "printers" | "materials" | "marketplaces" | "extraParts" | "packagings";
+  | "printers"
+  | "materials"
+  | "marketplaces"
+  | "extraParts"
+  | "packagings"
+  | "labor";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
@@ -23,6 +29,7 @@ const SECTION_ORDER: Section[] = [
   "marketplaces",
   "extraParts",
   "packagings",
+  "labor",
 ];
 
 export function CatalogTab() {
@@ -116,7 +123,7 @@ export function CatalogTab() {
         >
           {t("catalog.marketplaces")}
         </button>
-        {(["extraParts", "packagings"] as const).map((kind) => (
+        {(["extraParts", "packagings", "labor"] as const).map((kind) => (
           <button
             key={kind}
             role="tab"
@@ -126,7 +133,7 @@ export function CatalogTab() {
             onKeyDown={(e) => handleTabKeyDown(e, kind)}
             className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none ${section === kind ? "bg-[var(--accent-fill)] text-white" : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"}`}
           >
-            {t(`supplies.${kind}.title`)}
+            {t(kind === "labor" ? "labor.tabTitle" : `supplies.${kind}.title`)}
           </button>
         ))}
       </div>
@@ -149,6 +156,11 @@ export function CatalogTab() {
       {(section === "extraParts" || section === "packagings") && (
         <div id={`tabpanel-${section}`} role="tabpanel">
           <SupplyManager kind={section} />
+        </div>
+      )}
+      {section === "labor" && (
+        <div id="tabpanel-labor" role="tabpanel">
+          <LaborManager />
         </div>
       )}
     </div>

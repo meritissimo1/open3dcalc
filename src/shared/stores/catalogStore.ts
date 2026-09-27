@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   ExtraPart,
+  LaborCategory,
   Material,
   Marketplace,
   PackagingOption,
@@ -8,7 +9,10 @@ import type {
 } from "@/shared/types";
 import { fdmMaterials } from "@/shared/lib/materials";
 import { DEFAULT_FDM_MATERIAL_IDS } from "@/shared/lib/forkLocks";
-import { DEFAULT_PACKAGINGS } from "@/shared/lib/supplies";
+import {
+  DEFAULT_LABOR_HOURLY_RATE,
+  DEFAULT_PACKAGINGS,
+} from "@/shared/lib/supplies";
 import { printers } from "@/shared/lib/printers";
 import { marketplaces } from "@/shared/lib/marketplace";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
@@ -59,6 +63,16 @@ interface CatalogState {
     patch: Partial<Omit<PackagingOption, "id">>,
   ) => void;
   removePackaging: (id: string) => void;
+  /** Buma Labs fork: labor hourly rate and labor categories. */
+  laborHourlyRate: number;
+  laborCategories: LaborCategory[];
+  setLaborHourlyRate: (rate: number) => void;
+  addLaborCategory: (category: Omit<LaborCategory, "id" | "updatedAt">) => void;
+  updateLaborCategory: (
+    id: string,
+    patch: Partial<Omit<LaborCategory, "id">>,
+  ) => void;
+  removeLaborCategory: (id: string) => void;
 }
 
 const supplyId = (prefix: string) =>
@@ -73,6 +87,8 @@ const cloneDefaults = () => ({
   marketplaces: marketplaces.map((m) => ({ ...m })),
   extraParts: [] as ExtraPart[],
   packagings: DEFAULT_PACKAGINGS.map((p) => ({ ...p })),
+  laborHourlyRate: DEFAULT_LABOR_HOURLY_RATE,
+  laborCategories: [] as LaborCategory[],
 });
 
 const loadFromStorage = (): Partial<ReturnType<typeof cloneDefaults>> => {
@@ -101,6 +117,8 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
       defaults.marketplaces) as CatalogMarketplace[],
     extraParts: saved.extraParts ?? defaults.extraParts,
     packagings: saved.packagings ?? defaults.packagings,
+    laborHourlyRate: saved.laborHourlyRate ?? defaults.laborHourlyRate,
+    laborCategories: saved.laborCategories ?? defaults.laborCategories,
   };
 
   return {
@@ -118,6 +136,8 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
           defaults.marketplaces) as CatalogMarketplace[],
         extraParts: next.extraParts ?? defaults.extraParts,
         packagings: next.packagings ?? defaults.packagings,
+        laborHourlyRate: next.laborHourlyRate ?? defaults.laborHourlyRate,
+        laborCategories: next.laborCategories ?? defaults.laborCategories,
       });
     },
 
@@ -310,6 +330,45 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
         const next = {
           ...state,
           packagings: state.packagings.filter((p) => p.id !== id),
+        };
+        persist(next);
+        return next;
+      }),
+
+    setLaborHourlyRate: (rate) =>
+      set((state) => {
+        const next = { ...state, laborHourlyRate: Math.max(0, rate) };
+        persist(next);
+        return next;
+      }),
+    addLaborCategory: (category) =>
+      set((state) => {
+        const next = {
+          ...state,
+          laborCategories: [
+            ...state.laborCategories,
+            { ...category, id: supplyId("labor"), updatedAt: Date.now() },
+          ],
+        };
+        persist(next);
+        return next;
+      }),
+    updateLaborCategory: (id, patch) =>
+      set((state) => {
+        const next = {
+          ...state,
+          laborCategories: state.laborCategories.map((c) =>
+            c.id === id ? { ...c, ...patch, updatedAt: Date.now() } : c,
+          ),
+        };
+        persist(next);
+        return next;
+      }),
+    removeLaborCategory: (id) =>
+      set((state) => {
+        const next = {
+          ...state,
+          laborCategories: state.laborCategories.filter((c) => c.id !== id),
         };
         persist(next);
         return next;

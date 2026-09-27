@@ -16,8 +16,8 @@ import type { CalcLevel } from "./calculatorStore.types";
 import type { CurrencySetting } from "@/shared/lib/currency";
 import type { CalculationSnapshot } from "@/shared/types";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
-import { applyForkLocks } from "@/shared/lib/forkLocks";
-import { extrasTotal } from "@/shared/lib/supplies";
+import { applyForkLocks, lockLabor } from "@/shared/lib/forkLocks";
+import { DEFAULT_LABOR_HOURLY_RATE, extrasTotal } from "@/shared/lib/supplies";
 import {
   DEFAULT_FDM_MATERIAL,
   DEFAULT_FDM_PARAMS,
@@ -65,6 +65,10 @@ export type {
 
 const UNDO_LIMIT = 20;
 
+/** Buma Labs fork: the labor hourly rate is set in Cadastros. */
+const catalogLaborRate = (): number =>
+  useCatalogStore.getState().laborHourlyRate ?? DEFAULT_LABOR_HOURLY_RATE;
+
 /** Extracts data-only fields from CalculatorState into a JSON-safe snapshot. */
 function captureSnapshot(s: CalculatorState): string {
   return JSON.stringify({
@@ -100,6 +104,7 @@ function captureSnapshot(s: CalculatorState): string {
     productName: s.productName,
     extraSelections: s.extraSelections,
     packagingId: s.packagingId,
+    laborCategoryId: s.laborCategoryId,
     calcLevel: s.calcLevel,
     hiddenFields: s.hiddenFields,
     quantity: s.quantity,
@@ -152,7 +157,11 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     fdmMachine: { ...DEFAULT_FDM_MACHINE, ...loadStr("fdmMachine", {}) },
     fdmHardware: { ...DEFAULT_FDM_HARDWARE, ...loadStr("fdmHardware", {}) },
     fdmFinishing: { ...DEFAULT_FDM_FINISHING, ...loadStr("fdmFinishing", {}) },
-    fdmLabor: loadStr("fdmLabor", DEFAULT_LABOR),
+    // Buma Labs fork: a fresh calculation starts without labor time.
+    fdmLabor: loadStr("fdmLabor", {
+      ...DEFAULT_LABOR,
+      postProcessingTimeMinutes: 0,
+    }),
     fdmExtras: { ...DEFAULT_EXTRAS, ...loadStr("fdmExtras", {}) },
     fdmSales: { ...DEFAULT_SALES, ...loadStr("fdmSales", {}) },
     fdmOps: { ...DEFAULT_OPS, ...loadStr("fdmOps", {}) },
@@ -188,6 +197,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     productName: "",
     extraSelections: loadStr<ExtraSelection[]>("extraSelections", []),
     packagingId: loadStr<string | null>("packagingId", null),
+    laborCategoryId: loadStr<string | null>("laborCategoryId", null),
     calcLevel: loadStr<CalcLevel>(
       "calcLevel",
       migrateQuickMode(loadStr<boolean | undefined>("quickMode", undefined)),
@@ -216,7 +226,14 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     lastHistoryKey: null,
     history: [],
   };
-  const initialValues = applyForkLocks(loadedValues);
+  const locked = applyForkLocks(loadedValues);
+  const initialValues = {
+    ...locked,
+    fdmLabor: {
+      ...locked.fdmLabor,
+      hourlyRate: catalogLaborRate(),
+    },
+  };
 
   const initialValidation = computeValidatedStoreResults(initialValues);
 
@@ -401,6 +418,13 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         extraSelections: items,
         fdmExtras: { ...state.fdmExtras, extrasCost: extrasTotal(items) },
       })),
+    selectLaborCategory: (category) =>
+      setWithCompute((state) => ({
+        laborCategoryId: category?.id ?? null,
+        fdmLabor: category
+          ? { ...state.fdmLabor, postProcessingTimeMinutes: category.minutes }
+          : state.fdmLabor,
+      })),
     selectPackaging: (option) =>
       setWithCompute((state) => ({
         packagingId: option?.id ?? null,
@@ -466,7 +490,6 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
       const energyCost = parseFloat((rand(50, 110) / 100).toFixed(2));
       const margin = pick([30, 40, 50, 60, 80]);
       const machineCost = pick([800, 1200, 1800, 2000, 2500, 3500, 5000]);
-      const hourlyRate = pick([20, 25, 30, 35, 50]);
       const packaging = rand(2, 10);
       const shipping = Math.random() > 0.4 ? rand(10, 30) : 0;
       const setupTime = rand(10, 30);
@@ -525,15 +548,17 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           bedAdhesionCost: bedCost,
         },
         fdmFinishing: { enabled: false, suppliesCost: 5 },
+        // Buma Labs fork: per-piece labor at the catalog rate, no setup.
         fdmLabor: {
           enabled: true,
-          setupTimeMinutes: setupTime,
-          postProcessingTimeMinutes: postTime,
-          hourlyRate,
+          setupTimeMinutes: 0,
+          postProcessingTimeMinutes: postTime + setupTime,
+          hourlyRate: catalogLaborRate(),
         },
         fdmExtras: { extrasCost: 0 },
         extraSelections: [],
         packagingId: null,
+        laborCategoryId: null,
         fdmSales: {
           packagingCost: packaging,
           shippingCost: shipping,
@@ -560,7 +585,11 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         fdmMachine: { ...DEFAULT_FDM_MACHINE },
         fdmHardware: { ...DEFAULT_FDM_HARDWARE },
         fdmFinishing: { ...DEFAULT_FDM_FINISHING },
-        fdmLabor: { ...DEFAULT_LABOR },
+        fdmLabor: {
+          ...lockLabor(DEFAULT_LABOR),
+          postProcessingTimeMinutes: 0,
+          hourlyRate: catalogLaborRate(),
+        },
         fdmExtras: { ...DEFAULT_EXTRAS },
         fdmSales: { ...DEFAULT_SALES },
         fdmOps: { ...DEFAULT_OPS },
@@ -579,6 +608,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         productName: "",
         extraSelections: [],
         packagingId: null,
+        laborCategoryId: null,
         quantity: 1,
         infillPercent: 20,
         targetMarginMode: false,
@@ -642,6 +672,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         spoolId: s.selectedSpoolId,
         extraSelections: s.extraSelections,
         packagingId: s.packagingId,
+        laborCategoryId: s.laborCategoryId,
         productName: s.productName,
         quantity: s.quantity,
         infillPercent: s.infillPercent,
@@ -736,6 +767,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           productName: snapshot.productName,
           extraSelections: snapshot.extraSelections ?? [],
           packagingId: snapshot.packagingId ?? null,
+          laborCategoryId: snapshot.laborCategoryId ?? null,
           quantity: snapshot.quantity,
           infillPercent: snapshot.infillPercent,
           targetMarginMode: snapshot.targetMarginMode,
@@ -774,6 +806,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         fixedCosts: s.fixedCosts,
         extraSelections: s.extraSelections,
         packagingId: s.packagingId,
+        laborCategoryId: s.laborCategoryId,
         quantity: s.quantity,
         infillPercent: s.infillPercent,
         currency: s.currency,

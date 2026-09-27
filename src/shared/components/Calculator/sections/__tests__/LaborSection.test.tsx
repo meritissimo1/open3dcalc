@@ -49,27 +49,20 @@ describe('LaborSection', () => {
 		expect(screen.getByTestId('section-header')).toHaveTextContent('calc.labor')
 	})
 
-	it('shows three input fields (setup, post, hourly)', () => {
+	it('shows three input fields (setup, post, hourly) for resin', () => {
 		const store = createMockStore()
-		render(<LaborSection {...defaultProps} store={store} />)
+		render(<LaborSection {...defaultProps} isFDM={false} store={store} />)
 		const inputs = screen.getAllByRole('spinbutton')
 		expect(inputs.length).toBe(3)
 	})
 
-	it('displays FDM labor values when isFDM is true', () => {
-		const store = createMockStore({
-			fdmLabor: {
-				enabled: true,
-				setupTimeMinutes: 15,
-				postProcessingTimeMinutes: 20,
-				hourlyRate: 30,
-			},
-		})
+	// Buma Labs fork: FDM labor is a category + per-piece time at the
+	// catalog hourly rate (see LaborFields tests).
+	it('shows category and labor time for FDM', () => {
+		const store = createMockStore()
 		render(<LaborSection {...defaultProps} isFDM={true} store={store} />)
-		const inputs = screen.getAllByRole('spinbutton')
-		expect(inputs[0]).toHaveValue(15)  // setup
-		expect(inputs[1]).toHaveValue(20)  // post
-		expect(inputs[2]).toHaveValue(30)  // hourly
+		expect(screen.getAllByRole('spinbutton')).toHaveLength(1)
+		expect(screen.getByRole('combobox')).toBeInTheDocument()
 	})
 
 	it('displays resin labor values when isFDM is false', () => {

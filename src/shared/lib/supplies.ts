@@ -19,6 +19,9 @@ export function extrasTotal(items: readonly ExtraSelection[]): number {
   return Math.round(sum * 100) / 100;
 }
 
+/** Labor hourly rate of a fresh catalog; adjustable in Cadastros. */
+export const DEFAULT_LABOR_HOURLY_RATE = 50;
+
 /** Packaging sizes seeded into a fresh catalog; prices are set by the team. */
 export const DEFAULT_PACKAGINGS: readonly PackagingOption[] = [
   { id: "pkg_p", name: "P", cost: 0, updatedAt: 0 },

@@ -37,7 +37,7 @@ import {
 import { useModelComparison } from "@/shared/stores/modelComparison";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { printers } from "@/shared/lib/printers";
-import type { MaterialStateFDM } from "@/shared/types";
+import type { LaborCosts, MaterialStateFDM } from "@/shared/types";
 import { marketplaces } from "@/shared/lib/marketplace";
 import {
   applyForkLocks,
@@ -75,6 +75,8 @@ export interface SyncData {
     /** Buma Labs fork: all items (they are user data). Absent upstream. */
     extraParts?: unknown[];
     packagings?: unknown[];
+    laborCategories?: unknown[];
+    laborHourlyRate?: number;
   }; // open3dcalc_catalog_v1 (only custom: true)
   filaments: unknown[]; // open3dcalc_filaments
   /**
@@ -312,6 +314,8 @@ export function collectSyncData(): SyncData {
     marketplaces?: unknown[];
     extraParts?: unknown[];
     packagings?: unknown[];
+    laborCategories?: unknown[];
+    laborHourlyRate?: number;
   }>(KEYS.catalog, {});
 
   const filamentsRaw = readPlainJSON<unknown>(KEYS.filaments, []);
@@ -359,6 +363,12 @@ export function collectSyncData(): SyncData {
         : {}),
       ...(Array.isArray(catalog.packagings)
         ? { packagings: catalog.packagings }
+        : {}),
+      ...(Array.isArray(catalog.laborCategories)
+        ? { laborCategories: catalog.laborCategories }
+        : {}),
+      ...(typeof catalog.laborHourlyRate === "number"
+        ? { laborHourlyRate: catalog.laborHourlyRate }
         : {}),
     },
     filaments: Array.isArray(filamentsRaw) ? filamentsRaw : [],
@@ -440,7 +450,12 @@ function isSyncData(value: unknown): value is SyncData {
     Array.isArray(c.materials) &&
     Array.isArray(c.marketplaces) &&
     (c.extraParts === undefined || Array.isArray(c.extraParts)) &&
-    (c.packagings === undefined || Array.isArray(c.packagings))
+    (c.packagings === undefined || Array.isArray(c.packagings)) &&
+    (c.laborCategories === undefined || Array.isArray(c.laborCategories)) &&
+    (c.laborHourlyRate === undefined ||
+      (typeof c.laborHourlyRate === "number" &&
+        Number.isFinite(c.laborHourlyRate) &&
+        c.laborHourlyRate >= 0))
   );
 }
 
@@ -550,6 +565,8 @@ function applyCatalog(
     marketplaces?: unknown[];
     extraParts?: unknown[];
     packagings?: unknown[];
+    laborCategories?: unknown[];
+    laborHourlyRate?: number;
   }>(KEYS.catalog, {});
   const localPrinters = Array.isArray(local.printers) ? local.printers : [];
   const localMaterials = Array.isArray(local.materials) ? local.materials : [];
@@ -563,13 +580,16 @@ function applyCatalog(
 
   const importedExtraParts = data.extraParts ?? [];
   const importedPackagings = data.packagings ?? [];
+  const importedLaborCategories = data.laborCategories ?? [];
 
   const empty =
     importedPrinters.length === 0 &&
     importedMaterials.length === 0 &&
     importedMarketplaces.length === 0 &&
     importedExtraParts.length === 0 &&
-    importedPackagings.length === 0;
+    importedPackagings.length === 0 &&
+    importedLaborCategories.length === 0 &&
+    data.laborHourlyRate === undefined;
   if (empty && mode !== "replace") return null;
 
   let conflicts = 0;
@@ -599,6 +619,11 @@ function applyCatalog(
   };
   const extraParts = mergeSupplies(local.extraParts, data.extraParts);
   const packagings = mergeSupplies(local.packagings, data.packagings);
+  const laborCategories = mergeSupplies(
+    local.laborCategories,
+    data.laborCategories,
+  );
+  const laborHourlyRate = data.laborHourlyRate ?? local.laborHourlyRate;
 
   writeJSON(KEYS.catalog, {
     printers: mergeCustom(localPrinters, importedPrinters),
@@ -606,6 +631,8 @@ function applyCatalog(
     marketplaces: mergeCustom(localMarketplaces, importedMarketplaces),
     ...(extraParts ? { extraParts } : {}),
     ...(packagings ? { packagings } : {}),
+    ...(laborCategories ? { laborCategories } : {}),
+    ...(laborHourlyRate !== undefined ? { laborHourlyRate } : {}),
   });
   return { conflicts };
 }
@@ -827,6 +854,7 @@ const CALCULATOR_SETTING_KEYS = [
   "productName",
   "extraSelections",
   "packagingId",
+  "laborCategoryId",
   "quantity",
   "infillPercent",
   "targetMarginMode",
@@ -915,7 +943,16 @@ function synchronizeActiveStores(
 
   // Buma Labs fork: a backup from the upstream site may carry resin, a
   // simplified level or purge, which this fork no longer exposes.
-  const locked = applyForkLocks(merged as { fdmMaterial: MaterialStateFDM });
+  const lockedState = applyForkLocks(
+    merged as { fdmMaterial: MaterialStateFDM; fdmLabor: LaborCosts },
+  );
+  const locked = {
+    ...lockedState,
+    fdmLabor: {
+      ...lockedState.fdmLabor,
+      hourlyRate: useCatalogStore.getState().laborHourlyRate,
+    },
+  };
   const validated = computeValidatedStoreResults(locked);
   useCalculatorStore.setState({
     ...locked,

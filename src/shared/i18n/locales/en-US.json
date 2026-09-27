@@ -335,6 +335,23 @@
     "saleLabel": "Sale",
     "profitLabel": "Profit"
   },
+  "labor": {
+    "tabTitle": "Labor",
+    "sectionDesc": "Labor time and hourly rate",
+    "category": "Category",
+    "noCategory": "No category",
+    "time": "Labor time",
+    "timeTooltip": "Approximate hands-on time per piece (finishing, assembly, packing). Picking a category fills it in.",
+    "rateInfo": "Rate: {{rate}}/h · change it in Catalog → Labor",
+    "noCategories": "No labor categories yet. Add them in Catalog → Labor.",
+    "rateTitle": "Hourly rate",
+    "rateHint": "Fixed labor value used by every calculation.",
+    "hourlyRate": "Labor rate",
+    "addCategory": "New category",
+    "categoryHint": "Types of piece with their usual labor time. In the Calculator you just pick the category.",
+    "categoryPlaceholder": "e.g. Keychain with 3 clickers",
+    "emptyCategories": "No labor categories registered yet."
+  },
   "supplies": {
     "addExtra": "Add extra part",
     "noExtraParts": "No extra parts registered. Add them in Catalog → Extra parts.",

@@ -3,14 +3,18 @@ import { applyForkLocks } from "@/shared/lib/forkLocks";
 import { isFieldVisibleForLevel } from "@/shared/components/Calculator/Calculator.constants";
 import { useCalculatorStore } from "@/shared/stores/calculatorStore";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
-import { DEFAULT_FDM_MATERIAL } from "@/shared/stores/calculatorStore.defaults";
+import {
+  DEFAULT_FDM_MATERIAL,
+  DEFAULT_LABOR,
+} from "@/shared/stores/calculatorStore.defaults";
 
 describe("Buma Labs fork locks", () => {
-  it("forces FDM, the complete level and zero purge", () => {
+  it("forces FDM, the complete level, zero purge and per-piece labor", () => {
     const locked = applyForkLocks({
       activeTab: "resin",
       calcLevel: "basic",
       fdmMaterial: { ...DEFAULT_FDM_MATERIAL, purgeWeight: 25 },
+      fdmLabor: { ...DEFAULT_LABOR, enabled: false, setupTimeMinutes: 15 },
       productName: "Chaveiro",
     });
 
@@ -18,6 +22,8 @@ describe("Buma Labs fork locks", () => {
     expect(locked.calcLevel).toBe("advanced");
     expect(locked.fdmMaterial.purgeWeight).toBe(0);
     expect(locked.fdmMaterial.costPerKg).toBe(DEFAULT_FDM_MATERIAL.costPerKg);
+    expect(locked.fdmLabor.enabled).toBe(true);
+    expect(locked.fdmLabor.setupTimeMinutes).toBe(0);
     expect(locked.productName).toBe("Chaveiro");
   });
 

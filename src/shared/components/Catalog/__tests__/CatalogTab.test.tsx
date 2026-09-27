@@ -50,16 +50,17 @@ describe("CatalogTab", () => {
     expect(tablist).toHaveAttribute("aria-label", "catalog.title");
   });
 
-  it("renders five tabs with correct roles", () => {
+  it("renders six tabs with correct roles", () => {
     render(<CatalogTab />);
     const tabs = screen.getAllByRole("tab");
-    expect(tabs).toHaveLength(5);
+    expect(tabs).toHaveLength(6);
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(tabs[0]).toHaveAttribute("aria-controls", "tabpanel-printers");
     expect(tabs[1]).toHaveAttribute("aria-controls", "tabpanel-materials");
     expect(tabs[2]).toHaveAttribute("aria-controls", "tabpanel-marketplaces");
     expect(tabs[3]).toHaveAttribute("aria-controls", "tabpanel-extraParts");
     expect(tabs[4]).toHaveAttribute("aria-controls", "tabpanel-packagings");
+    expect(tabs[5]).toHaveAttribute("aria-controls", "tabpanel-labor");
   });
 
   it("has tabpanel with correct id", () => {
