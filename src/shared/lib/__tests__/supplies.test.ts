@@ -170,3 +170,36 @@ describe("catalog supplies", () => {
     ]);
   });
 });
+
+describe("importing a backup into a fresh browser", () => {
+  it.each(["merge", "replace"] as const)(
+    "keeps the built-in printers, filaments and marketplaces (%s)",
+    (mode) => {
+      localStorage.clear();
+      useCatalogStore.getState().load();
+      const data = emptySyncData();
+      data.catalog.materials = [
+        {
+          id: "c1",
+          name: "PLA Rosa",
+          type: "fdm",
+          density: 1.24,
+          avgPrice: 100,
+          custom: true,
+        },
+      ];
+
+      applySyncData(data, mode);
+
+      const catalog = useCatalogStore.getState();
+      expect(catalog.materials.map((m) => m.name)).toEqual([
+        "PLA",
+        "PLA Silk",
+        "PETG",
+        "PLA Rosa",
+      ]);
+      expect(catalog.printers.length).toBeGreaterThan(0);
+      expect(catalog.marketplaces.length).toBeGreaterThan(0);
+    },
+  );
+});
