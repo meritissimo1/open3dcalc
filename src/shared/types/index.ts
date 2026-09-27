@@ -273,6 +273,14 @@ export interface PackagingOption {
   updatedAt: number;
 }
 
+/** Buma Labs fork: a labor category with its usual labor time. */
+export interface LaborCategory {
+  id: string;
+  name: string;
+  minutes: number;
+  updatedAt: number;
+}
+
 /** An extra part picked in the calculator, with the unit cost at pick time. */
 export interface ExtraSelection {
   partId: string;
@@ -355,6 +363,7 @@ export interface CalculationSnapshot {
   /** Buma Labs fork: picked extra parts / packaging. Absent on old snapshots. */
   extraSelections?: ExtraSelection[];
   packagingId?: string | null;
+  laborCategoryId?: string | null;
   fdmMaterial: MaterialStateFDM;
   fdmPrintParams: PrintParameters;
   /** Slicer profile used by the STL estimators (D-EA1). Absent on old snapshots → keep current. */

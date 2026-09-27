@@ -102,13 +102,11 @@ export function computeStoreResults(s: ComputeStoreInput): CalculationResult {
       t.setupEach,
     );
     if (qty > 1) {
-      const laborPerUnit = s.fdmLabor.enabled
-        ? ((s.fdmLabor.setupTimeMinutes +
-            s.fdmLabor.postProcessingTimeMinutes) /
-            60) *
-          s.fdmLabor.hourlyRate
+      // Buma Labs fork: only the setup is amortized over the batch; the
+      // labor time is per piece, so it is charged on every unit.
+      const setupCost = s.fdmLabor.enabled
+        ? (s.fdmLabor.setupTimeMinutes / 60) * s.fdmLabor.hourlyRate
         : 0;
-      const setupCost = laborPerUnit;
       const bulkDiscount = getBulkDiscount(qty, s.fdmSales.volumeDiscounts);
       const discountMultiplier = 1 - bulkDiscount / 100;
       const perUnitCost =

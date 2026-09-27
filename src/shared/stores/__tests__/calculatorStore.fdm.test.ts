@@ -158,7 +158,8 @@ describe('CalculatorStore FDM', () => {
 
     it('labor enabled → laborCost > 0', () => {
       const store = useCalculatorStore.getState()
-      expect(store.fdmLabor.enabled).toBe(false)
+      // Buma Labs fork: labor is always on, starting with no labor time.
+      expect(store.fdmLabor.enabled).toBe(true)
       expect(store.results!.laborCost).toBe(0)
 
       store.setFdmLabor({

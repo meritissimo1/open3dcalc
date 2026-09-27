@@ -1,5 +1,6 @@
 import { HardHat } from 'lucide-react'
 import { InputGroup } from '@/shared/components/ui/InputGroup'
+import { LaborFields } from './LaborFields'
 import type { CalculatorState } from '@/shared/stores/calculatorStore'
 
 export interface LaborSectionProps {
@@ -23,6 +24,16 @@ export function LaborSection({
 	isFDM,
 	store,
 }: LaborSectionProps) {
+	// Buma Labs fork: labor time + category at the catalog hourly rate.
+	if (isFDM) {
+		return (
+			<div className="surface rounded-xl p-4 sm:p-5">
+				{renderSectionHeader(HardHat, t('calc.labor'), t('labor.sectionDesc'))}
+				<LaborFields />
+			</div>
+		)
+	}
+
 	return (
 		<div className="surface rounded-xl p-4 sm:p-5">
 			{renderSectionHeader(

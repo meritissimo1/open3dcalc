@@ -21,6 +21,7 @@ import type {
   FdmSlicerProfile,
   FdmFilamentParams,
   ExtraSelection,
+  LaborCategory,
   PackagingOption,
 } from "@/shared/types";
 import { marketplaces } from "@/shared/lib/marketplace";
@@ -111,6 +112,9 @@ export interface CalculatorState {
   /** Buma Labs fork: packaging picked from the catalog (sets packagingCost). */
   packagingId: string | null;
   selectPackaging: (option: PackagingOption | null) => void;
+  /** Buma Labs fork: labor category picked (fills the labor time). */
+  laborCategoryId: string | null;
+  selectLaborCategory: (category: LaborCategory | null) => void;
   calcLevel: CalcLevel;
   setCalcLevel: (v: CalcLevel) => void;
   hiddenFields: string[];

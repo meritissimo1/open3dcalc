@@ -1,10 +1,11 @@
-import type { MaterialStateFDM } from "@/shared/types";
+import type { LaborCosts, MaterialStateFDM } from "@/shared/types";
 
 /**
  * Buma Labs fork locks.
  *
  * The team only prints FDM and always uses the complete calculator, without
- * multi-material, purge/waste or infill inputs. The switches are removed
+ * multi-material, purge/waste or infill inputs. Labor is always charged as
+ * a per-piece time (no separate setup). The switches are removed
  * from the UI and the calculator store starts from these values; the store
  * itself keeps supporting every mode so the upstream logic stays intact.
  */
@@ -29,7 +30,9 @@ export const DEFAULT_FDM_MATERIAL_IDS: readonly string[] = [
  * comes from outside the UI: the initial load, history snapshots and data
  * imports (e.g. a backup exported from the upstream site).
  */
-export function applyForkLocks<T extends { fdmMaterial: MaterialStateFDM }>(
+export function applyForkLocks<
+  T extends { fdmMaterial: MaterialStateFDM; fdmLabor: LaborCosts },
+>(
   s: T,
 ): T & { activeTab: typeof LOCKED_TAB; calcLevel: typeof LOCKED_CALC_LEVEL } {
   return {
@@ -37,5 +40,11 @@ export function applyForkLocks<T extends { fdmMaterial: MaterialStateFDM }>(
     activeTab: LOCKED_TAB,
     calcLevel: LOCKED_CALC_LEVEL,
     fdmMaterial: { ...s.fdmMaterial, purgeWeight: 0 },
+    fdmLabor: lockLabor(s.fdmLabor),
   };
+}
+
+/** Labor always counts, as a per-piece time without a separate setup. */
+export function lockLabor(labor: LaborCosts): LaborCosts {
+  return { ...labor, enabled: true, setupTimeMinutes: 0 };
 }

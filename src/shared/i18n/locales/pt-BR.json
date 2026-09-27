@@ -335,6 +335,23 @@
     "saleLabel": "Venda",
     "profitLabel": "Lucro"
   },
+  "labor": {
+    "tabTitle": "Mão de obra",
+    "sectionDesc": "Tempo de mão de obra e taxa por hora",
+    "category": "Categoria",
+    "noCategory": "Sem categoria",
+    "time": "Tempo de mão de obra",
+    "timeTooltip": "Tempo aproximado de trabalho manual por peça (acabamento, montagem, embalagem). Escolher uma categoria preenche esse valor.",
+    "rateInfo": "Taxa: {{rate}}/h · ajuste em Cadastros → Mão de obra",
+    "noCategories": "Nenhuma categoria cadastrada. Cadastre em Cadastros → Mão de obra.",
+    "rateTitle": "Taxa por hora",
+    "rateHint": "Valor fixo de mão de obra usado em todos os cálculos.",
+    "hourlyRate": "Taxa de mão de obra",
+    "addCategory": "Nova categoria",
+    "categoryHint": "Tipos de peça com o tempo de mão de obra de sempre. Na Calculadora você só escolhe a categoria.",
+    "categoryPlaceholder": "Ex.: Chaveiro com 3 clickers",
+    "emptyCategories": "Nenhuma categoria cadastrada ainda."
+  },
   "supplies": {
     "addExtra": "Adicionar peça extra",
     "noExtraParts": "Nenhuma peça extra cadastrada. Cadastre em Cadastros → Peças extras.",
