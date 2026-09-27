@@ -335,6 +335,33 @@
     "saleLabel": "Sale",
     "profitLabel": "Profit"
   },
+  "supplies": {
+    "addExtra": "Add extra part",
+    "noExtraParts": "No extra parts registered. Add them in Catalog → Extra parts.",
+    "quantityOf": "Quantity of {{name}}",
+    "removeItem": "Remove {{name}}",
+    "editItem": "Edit {{name}}",
+    "edit": "Edit",
+    "extrasTotal": "Parts & extras total",
+    "noPackaging": "No packaging",
+    "currentValue": "Current value",
+    "name": "Name",
+    "cost": "Price",
+    "extraParts": {
+      "title": "Extra parts",
+      "add": "New extra part",
+      "hint": "Supplies that go with the piece. In the Calculator you just pick them and set the quantity.",
+      "namePlaceholder": "e.g. Chain",
+      "empty": "No extra parts registered yet."
+    },
+    "packagings": {
+      "title": "Packaging",
+      "add": "New packaging",
+      "hint": "Packaging sizes and their prices. In the Calculator you just pick the size used.",
+      "namePlaceholder": "e.g. S",
+      "empty": "No packaging registered yet."
+    }
+  },
   "catalog": {
     "title": "Catalogs & Presets",
     "subtitle": "Manage printers, materials and marketplaces used by the calculator.",

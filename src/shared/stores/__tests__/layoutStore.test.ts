@@ -68,12 +68,14 @@ describe("layoutStore — SPEC-01 gated persistence", () => {
     );
   });
 
-  it("reloads the persisted mode on module re-evaluation (reload)", () => {
+  // Buma Labs fork: the switcher is hidden, so a reload always lands on
+  // the classic calculator even if another mode was saved before.
+  it("ignores a persisted mode on module re-evaluation (reload)", () => {
     useLayoutStore.getState().setLayoutMode("guided");
 
     vi.resetModules();
     return import("../layoutStore").then(({ useLayoutStore: fresh }) => {
-      expect(fresh.getState().layoutMode).toBe("guided");
+      expect(fresh.getState().layoutMode).toBe("classic");
     });
   });
 

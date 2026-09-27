@@ -335,6 +335,33 @@
     "saleLabel": "Venda",
     "profitLabel": "Lucro"
   },
+  "supplies": {
+    "addExtra": "Adicionar peça extra",
+    "noExtraParts": "Nenhuma peça extra cadastrada. Cadastre em Cadastros → Peças extras.",
+    "quantityOf": "Quantidade de {{name}}",
+    "removeItem": "Remover {{name}}",
+    "editItem": "Editar {{name}}",
+    "edit": "Editar",
+    "extrasTotal": "Total de peças e extras",
+    "noPackaging": "Sem embalagem",
+    "currentValue": "Valor atual",
+    "name": "Nome",
+    "cost": "Valor",
+    "extraParts": {
+      "title": "Peças extras",
+      "add": "Nova peça extra",
+      "hint": "Insumos que vão junto com a peça. Na Calculadora você só escolhe e informa a quantidade.",
+      "namePlaceholder": "Ex.: Corrente",
+      "empty": "Nenhuma peça extra cadastrada ainda."
+    },
+    "packagings": {
+      "title": "Embalagens",
+      "add": "Nova embalagem",
+      "hint": "Tamanhos de embalagem e seus valores. Na Calculadora você só escolhe o tamanho usado.",
+      "namePlaceholder": "Ex.: P",
+      "empty": "Nenhuma embalagem cadastrada ainda."
+    }
+  },
   "catalog": {
     "title": "Cadastros e Presets",
     "subtitle": "Gerencie impressoras, materiais e marketplaces usados pela calculadora.",

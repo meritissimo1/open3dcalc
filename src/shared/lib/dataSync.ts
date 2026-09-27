@@ -35,6 +35,7 @@ import {
   type CustomColor,
 } from "@/shared/stores/colorPalette";
 import { useModelComparison } from "@/shared/stores/modelComparison";
+import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { printers } from "@/shared/lib/printers";
 import type { MaterialStateFDM } from "@/shared/types";
 import { marketplaces } from "@/shared/lib/marketplace";
@@ -71,6 +72,9 @@ export interface SyncData {
     printers: unknown[];
     materials: unknown[];
     marketplaces: unknown[];
+    /** Buma Labs fork: all items (they are user data). Absent upstream. */
+    extraParts?: unknown[];
+    packagings?: unknown[];
   }; // open3dcalc_catalog_v1 (only custom: true)
   filaments: unknown[]; // open3dcalc_filaments
   /**
@@ -306,6 +310,8 @@ export function collectSyncData(): SyncData {
     printers?: unknown[];
     materials?: unknown[];
     marketplaces?: unknown[];
+    extraParts?: unknown[];
+    packagings?: unknown[];
   }>(KEYS.catalog, {});
 
   const filamentsRaw = readPlainJSON<unknown>(KEYS.filaments, []);
@@ -348,6 +354,12 @@ export function collectSyncData(): SyncData {
       printers: catalog.printers?.filter(isCustomItem) ?? [],
       materials: catalog.materials?.filter(isCustomItem) ?? [],
       marketplaces: catalog.marketplaces?.filter(isCustomItem) ?? [],
+      ...(Array.isArray(catalog.extraParts)
+        ? { extraParts: catalog.extraParts }
+        : {}),
+      ...(Array.isArray(catalog.packagings)
+        ? { packagings: catalog.packagings }
+        : {}),
     },
     filaments: Array.isArray(filamentsRaw) ? filamentsRaw : [],
     products,
@@ -426,7 +438,9 @@ function isSyncData(value: unknown): value is SyncData {
   return (
     Array.isArray(c.printers) &&
     Array.isArray(c.materials) &&
-    Array.isArray(c.marketplaces)
+    Array.isArray(c.marketplaces) &&
+    (c.extraParts === undefined || Array.isArray(c.extraParts)) &&
+    (c.packagings === undefined || Array.isArray(c.packagings))
   );
 }
 
@@ -534,6 +548,8 @@ function applyCatalog(
     printers?: unknown[];
     materials?: unknown[];
     marketplaces?: unknown[];
+    extraParts?: unknown[];
+    packagings?: unknown[];
   }>(KEYS.catalog, {});
   const localPrinters = Array.isArray(local.printers) ? local.printers : [];
   const localMaterials = Array.isArray(local.materials) ? local.materials : [];
@@ -545,10 +561,15 @@ function applyCatalog(
   const importedMaterials = data.materials.filter(isCustomItem);
   const importedMarketplaces = data.marketplaces.filter(isCustomItem);
 
+  const importedExtraParts = data.extraParts ?? [];
+  const importedPackagings = data.packagings ?? [];
+
   const empty =
     importedPrinters.length === 0 &&
     importedMaterials.length === 0 &&
-    importedMarketplaces.length === 0;
+    importedMarketplaces.length === 0 &&
+    importedExtraParts.length === 0 &&
+    importedPackagings.length === 0;
   if (empty && mode !== "replace") return null;
 
   let conflicts = 0;
@@ -564,10 +585,27 @@ function applyCatalog(
     return result.merged;
   };
 
+  // Buma Labs fork: every extra part / packaging is user data. A bundle
+  // without them (e.g. from the upstream site) keeps the local lists.
+  const mergeSupplies = (
+    localArr: unknown[] | undefined,
+    importedArr: unknown[] | undefined,
+  ): unknown[] | undefined => {
+    if (importedArr === undefined) return localArr;
+    if (mode === "replace") return importedArr;
+    const result = mergeById(localArr ?? [], importedArr);
+    conflicts += result.conflicts;
+    return result.merged;
+  };
+  const extraParts = mergeSupplies(local.extraParts, data.extraParts);
+  const packagings = mergeSupplies(local.packagings, data.packagings);
+
   writeJSON(KEYS.catalog, {
     printers: mergeCustom(localPrinters, importedPrinters),
     materials: mergeCustom(localMaterials, importedMaterials),
     marketplaces: mergeCustom(localMarketplaces, importedMarketplaces),
+    ...(extraParts ? { extraParts } : {}),
+    ...(packagings ? { packagings } : {}),
   });
   return { conflicts };
 }
@@ -787,6 +825,8 @@ const CALCULATOR_SETTING_KEYS = [
   "fdmAmsSlots",
   "fixedCosts",
   "productName",
+  "extraSelections",
+  "packagingId",
   "quantity",
   "infillPercent",
   "targetMarginMode",
@@ -802,6 +842,7 @@ function synchronizeActiveStores(
 ): void {
   useHistoryStore.persist.rehydrate();
   useCustomerStore.persist.rehydrate();
+  useCatalogStore.getState().load();
   useQuoteStore.persist.rehydrate();
   useProductInventory.persist.rehydrate();
   useModelComparison.persist.rehydrate();

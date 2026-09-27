@@ -8,6 +8,7 @@ import { useHistoryStore } from "@/shared/stores/historyStore";
 import type { CalculatorState } from "./calculatorStore.types";
 import type {
   AMSSlot,
+  ExtraSelection,
   PostProcessingResin,
   MachineCosts,
 } from "@/shared/types";
@@ -16,6 +17,7 @@ import type { CurrencySetting } from "@/shared/lib/currency";
 import type { CalculationSnapshot } from "@/shared/types";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
 import { applyForkLocks } from "@/shared/lib/forkLocks";
+import { extrasTotal } from "@/shared/lib/supplies";
 import {
   DEFAULT_FDM_MATERIAL,
   DEFAULT_FDM_PARAMS,
@@ -96,6 +98,8 @@ function captureSnapshot(s: CalculatorState): string {
     fdmAmsSlots: s.fdmAmsSlots,
     fixedCosts: s.fixedCosts,
     productName: s.productName,
+    extraSelections: s.extraSelections,
+    packagingId: s.packagingId,
     calcLevel: s.calcLevel,
     hiddenFields: s.hiddenFields,
     quantity: s.quantity,
@@ -182,6 +186,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     ),
 
     productName: "",
+    extraSelections: loadStr<ExtraSelection[]>("extraSelections", []),
+    packagingId: loadStr<string | null>("packagingId", null),
     calcLevel: loadStr<CalcLevel>(
       "calcLevel",
       migrateQuickMode(loadStr<boolean | undefined>("quickMode", undefined)),
@@ -390,6 +396,16 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     },
 
     setProductName: (productName) => setWithCompute({ productName }),
+    setExtraSelections: (items) =>
+      setWithCompute((state) => ({
+        extraSelections: items,
+        fdmExtras: { ...state.fdmExtras, extrasCost: extrasTotal(items) },
+      })),
+    selectPackaging: (option) =>
+      setWithCompute((state) => ({
+        packagingId: option?.id ?? null,
+        fdmSales: { ...state.fdmSales, packagingCost: option?.cost ?? 0 },
+      })),
     setCalcLevel: (calcLevel) => setWithCompute({ calcLevel }),
     toggleField: (fieldId) =>
       setWithCompute((state) => {
@@ -516,6 +532,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           hourlyRate,
         },
         fdmExtras: { extrasCost: 0 },
+        extraSelections: [],
+        packagingId: null,
         fdmSales: {
           packagingCost: packaging,
           shippingCost: shipping,
@@ -559,6 +577,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         resinSoft: { ...DEFAULT_RESIN_SOFT },
         fixedCosts: { ...DEFAULT_FIXED_COSTS },
         productName: "",
+        extraSelections: [],
+        packagingId: null,
         quantity: 1,
         infillPercent: 20,
         targetMarginMode: false,
@@ -620,6 +640,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         selectedPrinterId: s.selectedPrinter.id,
         selectedMarketplaceId: s.selectedMarketplace.id,
         spoolId: s.selectedSpoolId,
+        extraSelections: s.extraSelections,
+        packagingId: s.packagingId,
         productName: s.productName,
         quantity: s.quantity,
         infillPercent: s.infillPercent,
@@ -712,6 +734,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           resinOps: snapshot.resinOps,
           resinSoft: snapshot.resinSoft,
           productName: snapshot.productName,
+          extraSelections: snapshot.extraSelections ?? [],
+          packagingId: snapshot.packagingId ?? null,
           quantity: snapshot.quantity,
           infillPercent: snapshot.infillPercent,
           targetMarginMode: snapshot.targetMarginMode,
@@ -748,6 +772,8 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         fdmAmsEnabled: false,
         fdmAmsSlots: s.fdmAmsSlots,
         fixedCosts: s.fixedCosts,
+        extraSelections: s.extraSelections,
+        packagingId: s.packagingId,
         quantity: s.quantity,
         infillPercent: s.infillPercent,
         currency: s.currency,

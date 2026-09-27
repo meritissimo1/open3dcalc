@@ -77,8 +77,8 @@ export const TABS: TabEntry[] = [
   {
     id: "catalog",
     icon: <Settings2 className="w-[18px] h-[18px]" />,
-    labelKey: "nav.printers",
-    label: "Impressoras",
+    labelKey: "nav.catalog",
+    label: "Cadastros",
   },
   {
     id: "inventory",

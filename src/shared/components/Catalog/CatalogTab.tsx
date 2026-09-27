@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { PrinterTagEditor } from "@/shared/components/Catalog/PrinterTagEditor";
+import { SupplyManager } from "@/shared/components/Catalog/SupplyManager";
 import { InputGroup } from "@/shared/components/ui/InputGroup";
 import { Select } from "@/shared/components/ui/Select";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
@@ -11,11 +12,18 @@ import { marketplaces } from "@/shared/lib/marketplace";
 import { Pencil, X } from "lucide-react";
 import { useCurrency } from "@/shared/hooks/useCurrency";
 
-type Section = "printers" | "materials" | "marketplaces";
+type Section =
+  "printers" | "materials" | "marketplaces" | "extraParts" | "packagings";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-const SECTION_ORDER: Section[] = ["printers", "materials", "marketplaces"];
+const SECTION_ORDER: Section[] = [
+  "printers",
+  "materials",
+  "marketplaces",
+  "extraParts",
+  "packagings",
+];
 
 export function CatalogTab() {
   const { t } = useTranslation();
@@ -74,7 +82,7 @@ export function CatalogTab() {
       </div>
 
       <div
-        className="surface rounded-xl p-2 flex gap-2"
+        className="surface rounded-xl p-2 flex flex-wrap gap-2"
         role="tablist"
         aria-label={t("catalog.title")}
       >
@@ -108,6 +116,19 @@ export function CatalogTab() {
         >
           {t("catalog.marketplaces")}
         </button>
+        {(["extraParts", "packagings"] as const).map((kind) => (
+          <button
+            key={kind}
+            role="tab"
+            aria-selected={section === kind}
+            aria-controls={`tabpanel-${kind}`}
+            onClick={() => setSection(kind)}
+            onKeyDown={(e) => handleTabKeyDown(e, kind)}
+            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none ${section === kind ? "bg-[var(--accent-fill)] text-white" : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"}`}
+          >
+            {t(`supplies.${kind}.title`)}
+          </button>
+        ))}
       </div>
 
       {section === "printers" && (
@@ -123,6 +144,11 @@ export function CatalogTab() {
       {section === "marketplaces" && (
         <div id="tabpanel-marketplaces" role="tabpanel">
           <MarketplaceManager />
+        </div>
+      )}
+      {(section === "extraParts" || section === "packagings") && (
+        <div id={`tabpanel-${section}`} role="tabpanel">
+          <SupplyManager kind={section} />
         </div>
       )}
     </div>

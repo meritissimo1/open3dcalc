@@ -257,6 +257,30 @@ export interface AdditionalCosts {
   extrasCost: number;
 }
 
+/** Buma Labs fork: a registered extra part (e.g. "Corrente" = 0.60). */
+export interface ExtraPart {
+  id: string;
+  name: string;
+  cost: number;
+  updatedAt: number;
+}
+
+/** Buma Labs fork: a registered packaging size (P, M, G, GG…). */
+export interface PackagingOption {
+  id: string;
+  name: string;
+  cost: number;
+  updatedAt: number;
+}
+
+/** An extra part picked in the calculator, with the unit cost at pick time. */
+export interface ExtraSelection {
+  partId: string;
+  name: string;
+  unitCost: number;
+  quantity: number;
+}
+
 export interface VolumeDiscount {
   minQuantity: number;
   discountPercent: number;
@@ -328,6 +352,9 @@ export interface CalculationSnapshot {
   spoolId?: string | null;
   fdmAmsEnabled?: boolean;
   fdmAmsSlots?: AMSSlot[];
+  /** Buma Labs fork: picked extra parts / packaging. Absent on old snapshots. */
+  extraSelections?: ExtraSelection[];
+  packagingId?: string | null;
   fdmMaterial: MaterialStateFDM;
   fdmPrintParams: PrintParameters;
   /** Slicer profile used by the STL estimators (D-EA1). Absent on old snapshots → keep current. */

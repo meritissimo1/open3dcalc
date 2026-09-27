@@ -107,6 +107,8 @@ export function debouncedAutoSave(getState: () => CalculatorState) {
       fdmAmsEnabled: false,
       fdmAmsSlots: s.fdmAmsSlots,
       fixedCosts: s.fixedCosts,
+      extraSelections: s.extraSelections,
+      packagingId: s.packagingId,
       productName: s.productName,
       quantity: s.quantity,
       infillPercent: s.infillPercent,

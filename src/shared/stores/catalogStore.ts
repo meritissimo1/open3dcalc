@@ -1,7 +1,14 @@
 import { create } from "zustand";
-import type { Material, PrinterProfile, Marketplace } from "@/shared/types";
+import type {
+  ExtraPart,
+  Material,
+  Marketplace,
+  PackagingOption,
+  PrinterProfile,
+} from "@/shared/types";
 import { fdmMaterials } from "@/shared/lib/materials";
 import { DEFAULT_FDM_MATERIAL_IDS } from "@/shared/lib/forkLocks";
+import { DEFAULT_PACKAGINGS } from "@/shared/lib/supplies";
 import { printers } from "@/shared/lib/printers";
 import { marketplaces } from "@/shared/lib/marketplace";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
@@ -14,7 +21,8 @@ type CatalogMaterial = Material & { custom?: boolean };
 type CatalogMarketplace = Marketplace & { custom?: boolean };
 
 /** Free tags are case-insensitive and whitespace-collapsed so duplicates collapse to one entry. */
-const normalizeTag = (raw: string): string => raw.trim().toLowerCase().replace(/\s+/g, " ");
+const normalizeTag = (raw: string): string =>
+  raw.trim().toLowerCase().replace(/\s+/g, " ");
 
 /** Backward-compat: bundles persisted before Phase 4A have no `tags` field. Coerce to `[]`. */
 const withTags = (printers: CatalogPrinter[]): CatalogPrinter[] =>
@@ -39,7 +47,22 @@ interface CatalogState {
   addMarketplace: (marketplace: CatalogMarketplace) => void;
   updateMarketplace: (id: string, patch: Partial<CatalogMarketplace>) => void;
   removeMarketplace: (id: string) => void;
+  /** Buma Labs fork: extra parts and packaging sizes. */
+  extraParts: ExtraPart[];
+  packagings: PackagingOption[];
+  addExtraPart: (part: Omit<ExtraPart, "id" | "updatedAt">) => void;
+  updateExtraPart: (id: string, patch: Partial<Omit<ExtraPart, "id">>) => void;
+  removeExtraPart: (id: string) => void;
+  addPackaging: (option: Omit<PackagingOption, "id" | "updatedAt">) => void;
+  updatePackaging: (
+    id: string,
+    patch: Partial<Omit<PackagingOption, "id">>,
+  ) => void;
+  removePackaging: (id: string) => void;
 }
+
+const supplyId = (prefix: string) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
 const cloneDefaults = () => ({
   printers: withTags(printers.map((p) => ({ ...p }))),
@@ -48,6 +71,8 @@ const cloneDefaults = () => ({
     .filter((m) => DEFAULT_FDM_MATERIAL_IDS.includes(m.id))
     .map((m) => ({ ...m })),
   marketplaces: marketplaces.map((m) => ({ ...m })),
+  extraParts: [] as ExtraPart[],
+  packagings: DEFAULT_PACKAGINGS.map((p) => ({ ...p })),
 });
 
 const loadFromStorage = (): Partial<ReturnType<typeof cloneDefaults>> => {
@@ -68,10 +93,14 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
   const saved = loadFromStorage();
 
   const initial = {
-    printers: withTags((saved.printers ?? defaults.printers) as CatalogPrinter[]),
+    printers: withTags(
+      (saved.printers ?? defaults.printers) as CatalogPrinter[],
+    ),
     materials: (saved.materials ?? defaults.materials) as CatalogMaterial[],
     marketplaces: (saved.marketplaces ??
       defaults.marketplaces) as CatalogMarketplace[],
+    extraParts: saved.extraParts ?? defaults.extraParts,
+    packagings: saved.packagings ?? defaults.packagings,
   };
 
   return {
@@ -81,10 +110,14 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
     load: () => {
       const next = loadFromStorage();
       set({
-        printers: withTags((next.printers ?? defaults.printers) as CatalogPrinter[]),
+        printers: withTags(
+          (next.printers ?? defaults.printers) as CatalogPrinter[],
+        ),
         materials: (next.materials ?? defaults.materials) as CatalogMaterial[],
         marketplaces: (next.marketplaces ??
           defaults.marketplaces) as CatalogMarketplace[],
+        extraParts: next.extraParts ?? defaults.extraParts,
+        packagings: next.packagings ?? defaults.packagings,
       });
     },
 
@@ -211,6 +244,72 @@ export const useCatalogStore = create<CatalogState>((set, get) => {
         const next = {
           ...state,
           marketplaces: state.marketplaces.filter((m) => m.id !== id),
+        };
+        persist(next);
+        return next;
+      }),
+
+    addExtraPart: (part) =>
+      set((state) => {
+        const next = {
+          ...state,
+          extraParts: [
+            ...state.extraParts,
+            { ...part, id: supplyId("extra"), updatedAt: Date.now() },
+          ],
+        };
+        persist(next);
+        return next;
+      }),
+    updateExtraPart: (id, patch) =>
+      set((state) => {
+        const next = {
+          ...state,
+          extraParts: state.extraParts.map((p) =>
+            p.id === id ? { ...p, ...patch, updatedAt: Date.now() } : p,
+          ),
+        };
+        persist(next);
+        return next;
+      }),
+    removeExtraPart: (id) =>
+      set((state) => {
+        const next = {
+          ...state,
+          extraParts: state.extraParts.filter((p) => p.id !== id),
+        };
+        persist(next);
+        return next;
+      }),
+
+    addPackaging: (option) =>
+      set((state) => {
+        const next = {
+          ...state,
+          packagings: [
+            ...state.packagings,
+            { ...option, id: supplyId("pkg"), updatedAt: Date.now() },
+          ],
+        };
+        persist(next);
+        return next;
+      }),
+    updatePackaging: (id, patch) =>
+      set((state) => {
+        const next = {
+          ...state,
+          packagings: state.packagings.map((p) =>
+            p.id === id ? { ...p, ...patch, updatedAt: Date.now() } : p,
+          ),
+        };
+        persist(next);
+        return next;
+      }),
+    removePackaging: (id) =>
+      set((state) => {
+        const next = {
+          ...state,
+          packagings: state.packagings.filter((p) => p.id !== id),
         };
         persist(next);
         return next;
