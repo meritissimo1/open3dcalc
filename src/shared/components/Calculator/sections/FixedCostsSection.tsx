@@ -61,7 +61,7 @@ export function FixedCostsSection({
 							)
 						}
 						type="number"
-						unit="h/mês"
+						unit={t("bento.units.hoursPerMonth")}
 						tooltip={t('calc.fixedCost.monthlyHoursTooltip')}
 					/>
 				</div>
