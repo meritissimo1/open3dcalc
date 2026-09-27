@@ -140,7 +140,7 @@ function FilamentAssumptionField({
       type="number"
       step={config.step}
       unit={config.unit}
-      placeholder={config.placeholder}
+      placeholder={config.placeholder ? t(config.placeholder) : undefined}
       tooltip={t(config.tooltipKey)}
       error={error}
     />
