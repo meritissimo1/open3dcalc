@@ -3,6 +3,15 @@ import { persist } from "zustand/middleware";
 import { manifestStorage } from "@/shared/lib/manifestStorage";
 import type { Product, ProductFormData } from "@/shared/types";
 
+/** Fields the calculator fills in on a product. */
+export type CalculatedProduct = Pick<
+  ProductFormData,
+  "name" | "weightGrams" | "filamentType" | "costPrice"
+> & { printTimeHours: number; link?: string };
+
+const normalizeName = (name: string) =>
+  name.trim().toLowerCase().replace(/\s+/g, " ");
+
 function generateId(): string {
   return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -21,7 +30,7 @@ function escapeCsvCell(value: string | number): string {
 
 export function exportProductsCSV(): string {
   const header =
-    "id,name,weightGrams,filamentType,costPrice,salePrice,sold,createdAt,updatedAt";
+    "id,name,weightGrams,filamentType,costPrice,salePrice,sold,createdAt,updatedAt,status,link,printTimeHours,inPersonPrice";
   const rows = useProductInventory
     .getState()
     .products.map((p) =>
@@ -35,6 +44,10 @@ export function exportProductsCSV(): string {
         p.sold ? 1 : 0,
         p.createdAt,
         p.updatedAt,
+        p.status ?? "testing",
+        p.link ?? "",
+        p.printTimeHours ?? "",
+        p.inPersonPrice ?? "",
       ]
         .map(escapeCsvCell)
         .join(","),
@@ -49,6 +62,13 @@ interface ProductInventoryState {
   updateProduct: (id: string, data: Partial<ProductFormData>) => void;
   removeProduct: (id: string) => void;
   markSold: (id: string, sold: boolean) => void;
+  /**
+   * Buma Labs fork: saves a calculated product. Matches an existing product
+   * by name (case/space-insensitive) and refreshes its calculated fields,
+   * keeping the manual ones (status, prices); otherwise creates it as
+   * "testing" with no prices yet. Returns the product id.
+   */
+  upsertFromCalculator: (data: CalculatedProduct) => string;
 
   getProduct: (id: string) => Product | undefined;
   searchProducts: (query: string) => Product[];
@@ -77,6 +97,14 @@ export const useProductInventory = create<ProductInventoryState>()(
           sold: false,
           createdAt: now,
           updatedAt: now,
+          status: data.status ?? "testing",
+          ...(data.link ? { link: data.link } : {}),
+          ...(data.printTimeHours !== undefined
+            ? { printTimeHours: data.printTimeHours }
+            : {}),
+          ...(data.inPersonPrice !== undefined
+            ? { inPersonPrice: data.inPersonPrice }
+            : {}),
         };
         set((state) => ({ products: [...state.products, product] }));
         return id;
@@ -101,6 +129,14 @@ export const useProductInventory = create<ProductInventoryState>()(
                   ...(data.salePrice !== undefined
                     ? { salePrice: data.salePrice }
                     : {}),
+                  ...(data.status !== undefined ? { status: data.status } : {}),
+                  ...(data.link !== undefined ? { link: data.link } : {}),
+                  ...(data.printTimeHours !== undefined
+                    ? { printTimeHours: data.printTimeHours }
+                    : {}),
+                  ...(data.inPersonPrice !== undefined
+                    ? { inPersonPrice: data.inPersonPrice }
+                    : {}),
                   updatedAt: Date.now(),
                 }
               : p,
@@ -119,6 +155,29 @@ export const useProductInventory = create<ProductInventoryState>()(
             p.id === id ? { ...p, sold, updatedAt: Date.now() } : p,
           ),
         })),
+
+      upsertFromCalculator: (data) => {
+        const key = normalizeName(data.name);
+        const existing = get().products.find(
+          (p) => normalizeName(p.name) === key,
+        );
+        if (!existing) {
+          return get().addProduct({
+            ...data,
+            salePrice: 0,
+            inPersonPrice: 0,
+            status: "testing",
+          });
+        }
+        get().updateProduct(existing.id, {
+          weightGrams: data.weightGrams,
+          filamentType: data.filamentType,
+          costPrice: data.costPrice,
+          printTimeHours: data.printTimeHours,
+          ...(data.link ? { link: data.link } : {}),
+        });
+        return existing.id;
+      },
 
       getProduct: (id) => get().products.find((p) => p.id === id),
 

@@ -336,7 +336,11 @@ export interface CalculationResult {
 
 export { type Customer, type CustomerFormData } from "./customer";
 export { type Quote, type QuoteItem, type QuoteFormData } from "./quote";
-export { type Product, type ProductFormData } from "./product";
+export {
+  type Product,
+  type ProductFormData,
+  type ProductStatus,
+} from "./product";
 export { type EstimationMode, type EstimateOptions } from "./estimation";
 
 export interface HistoryEntry {
@@ -364,6 +368,8 @@ export interface CalculationSnapshot {
   extraSelections?: ExtraSelection[];
   packagingId?: string | null;
   laborCategoryId?: string | null;
+  /** Buma Labs fork: product link carried to the Products tab. */
+  productLink?: string;
   fdmMaterial: MaterialStateFDM;
   fdmPrintParams: PrintParameters;
   /** Slicer profile used by the STL estimators (D-EA1). Absent on old snapshots → keep current. */

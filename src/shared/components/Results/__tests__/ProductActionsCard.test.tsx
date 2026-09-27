@@ -82,7 +82,9 @@ beforeEach(() => {
 });
 
 describe("ProductActionsCard", () => {
-  it("registers a product at the displayed sell price", async () => {
+  // Buma Labs fork: prices are manual in the Products tab; registering only
+  // fills the calculated fields (cost, weight, print time).
+  it("registers a product with its cost and no prices yet", async () => {
     const user = userEvent.setup();
     render(<ProductActionsCard displaySellPrice={105.88} />);
 
@@ -94,7 +96,8 @@ describe("ProductActionsCard", () => {
     expect(products).toHaveLength(1);
     expect(products[0].name).toBe("Vaso Teste");
     expect(products[0].costPrice).toBe(60);
-    expect(products[0].salePrice).toBe(105.88);
+    expect(products[0].salePrice).toBe(0);
+    expect(products[0].status).toBe("testing");
     expect(products[0].weightGrams).toBe(85);
   });
 
@@ -110,17 +113,6 @@ describe("ProductActionsCard", () => {
       "results.productRegistered",
     );
     expect(screen.getByText("results.viewProducts")).toBeInTheDocument();
-  });
-
-  it("honors an overridden sell price when registering", async () => {
-    const user = userEvent.setup();
-    render(<ProductActionsCard displaySellPrice={120} />);
-
-    await user.click(
-      screen.getByRole("button", { name: "results.registerProduct" }),
-    );
-
-    expect(useProductInventory.getState().products[0].salePrice).toBe(120);
   });
 
   it("prompts for a name when the product name is empty", async () => {
@@ -150,7 +142,7 @@ describe("ProductActionsCard", () => {
     expect(useProductInventory.getState().products).toHaveLength(0);
   });
 
-  it("warns — without blocking — on a duplicate name", async () => {
+  it("updates the product with the same name instead of duplicating it", async () => {
     const user = userEvent.setup();
     useProductInventory.setState({
       products: [
@@ -173,9 +165,13 @@ describe("ProductActionsCard", () => {
       screen.getByRole("button", { name: "results.registerProduct" }),
     );
 
-    expect(useProductInventory.getState().products).toHaveLength(2);
+    const products = useProductInventory.getState().products;
+    expect(products).toHaveLength(1);
+    expect(products[0].costPrice).toBe(60);
+    // Manual price is kept.
+    expect(products[0].salePrice).toBe(1);
     expect(screen.getByRole("status")).toHaveTextContent(
-      "results.productDuplicateWarn",
+      "results.productUpdated",
     );
   });
 

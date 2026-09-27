@@ -5,6 +5,8 @@ import { printers } from "@/shared/lib/printers";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { useFilamentInventory } from "@/shared/stores/filamentInventory";
 import { useHistoryStore } from "@/shared/stores/historyStore";
+import { useProductInventory } from "@/shared/stores/productInventory";
+import { roundCurrency } from "@/shared/lib/currency";
 import type { CalculatorState } from "./calculatorStore.types";
 import type {
   AMSSlot,
@@ -102,6 +104,7 @@ function captureSnapshot(s: CalculatorState): string {
     fdmAmsSlots: s.fdmAmsSlots,
     fixedCosts: s.fixedCosts,
     productName: s.productName,
+    productLink: s.productLink,
     extraSelections: s.extraSelections,
     packagingId: s.packagingId,
     laborCategoryId: s.laborCategoryId,
@@ -195,6 +198,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     ),
 
     productName: "",
+    productLink: "",
     extraSelections: loadStr<ExtraSelection[]>("extraSelections", []),
     packagingId: loadStr<string | null>("packagingId", null),
     laborCategoryId: loadStr<string | null>("laborCategoryId", null),
@@ -413,6 +417,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     },
 
     setProductName: (productName) => setWithCompute({ productName }),
+    setProductLink: (productLink) => setWithCompute({ productLink }),
     setExtraSelections: (items) =>
       setWithCompute((state) => ({
         extraSelections: items,
@@ -606,6 +611,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         resinSoft: { ...DEFAULT_RESIN_SOFT },
         fixedCosts: { ...DEFAULT_FIXED_COSTS },
         productName: "",
+        productLink: "",
         extraSelections: [],
         packagingId: null,
         laborCategoryId: null,
@@ -674,12 +680,26 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         packagingId: s.packagingId,
         laborCategoryId: s.laborCategoryId,
         productName: s.productName,
+        productLink: s.productLink,
         quantity: s.quantity,
         infillPercent: s.infillPercent,
         targetMarginMode: s.targetMarginMode,
         enabledSections: s.enabledSections,
         results: r,
       };
+
+      // Buma Labs fork: every saved calculation with a name lands in the
+      // Products tab with its cost already filled in.
+      if (s.productName.trim().length >= 2) {
+        useProductInventory.getState().upsertFromCalculator({
+          name: s.productName.trim(),
+          weightGrams: roundCurrency(Math.max(0, r.unitWeight)),
+          filamentType: s.fdmMaterial.type,
+          costPrice: roundCurrency(Math.max(0, r.totalCost)),
+          printTimeHours: s.fdmPrintParams.printTimeHours,
+          link: s.productLink.trim(),
+        });
+      }
 
       const historyKey = JSON.stringify({ ...snapshot, id: "", timestamp: 0 });
       if (s.lastHistoryKey === historyKey) return;
@@ -765,6 +785,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           resinOps: snapshot.resinOps,
           resinSoft: snapshot.resinSoft,
           productName: snapshot.productName,
+          productLink: snapshot.productLink ?? "",
           extraSelections: snapshot.extraSelections ?? [],
           packagingId: snapshot.packagingId ?? null,
           laborCategoryId: snapshot.laborCategoryId ?? null,
