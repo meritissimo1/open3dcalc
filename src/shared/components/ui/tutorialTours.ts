@@ -213,12 +213,6 @@ export const TOURS: Record<TourId, StepConfig[]> = {
   "nivel-avancado": [
     { key: "adv-intro", target: null, tab: "calculator" },
     {
-      key: "adv-level",
-      target: '[data-tutorial="level-toggle"]',
-      tab: "calculator",
-      level: "advanced",
-    },
-    {
       key: "adv-failure",
       target: '[data-tutorial="failure"]',
       tab: "calculator",

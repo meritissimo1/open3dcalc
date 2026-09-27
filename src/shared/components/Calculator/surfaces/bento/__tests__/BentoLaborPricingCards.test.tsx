@@ -48,7 +48,6 @@ const ADVANCED_PRICING_FIELDS = [
   "Taxa de falha",
   "Quantidade",
   "Markup sobre o custo",
-  "Preenchimento (Infill)",
   "Frete",
 ] as const;
 
@@ -126,7 +125,7 @@ describe("editable labor and pricing cards", () => {
     [
       "intermediate",
       ["Peças e Extras", "Embalagem"],
-      ["Preenchimento (Infill)", "Frete", "Taxa do marketplace", "Imposto", "Taxa de falha", "Quantidade", "Markup sobre o custo"],
+      ["Frete", "Taxa do marketplace", "Imposto", "Taxa de falha", "Quantidade", "Markup sobre o custo"],
     ],
     ["advanced", ADVANCED_LABOR_FIELDS, ADVANCED_PRICING_FIELDS],
   ] as const)("uses the Classic level contract in %s mode", (level, laborFields, pricingFields) => {
@@ -180,7 +179,6 @@ describe("editable labor and pricing cards", () => {
     changeField(pricingCard, "Taxa de falha", "7.5");
     changeField(pricingCard, "Quantidade", "6");
     changeField(pricingCard, "Markup sobre o custo", "65");
-    changeField(pricingCard, "Preenchimento (Infill)", "45");
     changeField(pricingCard, "Frete", "18");
 
     const state = useCalculatorStore.getState();
@@ -199,7 +197,6 @@ describe("editable labor and pricing cards", () => {
     });
     expect(state.fdmPrintParams.failureValue).toBe(7.5);
     expect(state.quantity).toBe(6);
-    expect(state.infillPercent).toBe(45);
   });
 
   it("writes resin premises without mutating the FDM premises", () => {
@@ -263,7 +260,7 @@ describe("editable labor and pricing cards", () => {
     for (const name of ["Setup (Slicing)", "Post-Processing", "Hourly Rate", "Parts & Extras", "Packaging"]) {
       expect(within(laborCard).getByRole("spinbutton", { name })).toBeVisible();
     }
-    for (const name of ["Marketplace fee", "Tax", "Failure rate", "Quantity", "Markup on cost", "Infill Percentage", "Shipping"]) {
+    for (const name of ["Marketplace fee", "Tax", "Failure rate", "Quantity", "Markup on cost", "Shipping"]) {
       expect(within(pricingCard).getByRole("spinbutton", { name })).toBeVisible();
     }
     expect(within(pricingCard).getByText("units")).toBeVisible();

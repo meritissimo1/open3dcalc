@@ -688,12 +688,13 @@ describe("tour: nivel-avancado", () => {
     useCalculatorStore.setState({ calcLevel: "basic" });
   });
 
-  it("registry wires ten steps that unlock the advanced level on the calculator tab", () => {
+  // Buma Labs fork: the LevelToggle was removed, so the tour has no
+  // adv-level step and the first gated section flips the level instead.
+  it("registry wires nine steps that unlock the advanced level on the calculator tab", () => {
     const steps = TOURS["nivel-avancado"];
-    expect(steps).toHaveLength(10);
+    expect(steps).toHaveLength(9);
     expect(steps.map((s) => s.key)).toEqual([
       "adv-intro",
-      "adv-level",
       "adv-failure",
       "adv-hardware",
       "adv-machine",
@@ -783,20 +784,20 @@ describe("tour: nivel-avancado", () => {
     expect(
       await screen.findByText("tutorial.steps.adv-intro.title"),
     ).toBeInTheDocument();
-    expect(await screen.findByText("Passo 1 de 10")).toBeInTheDocument();
+    expect(await screen.findByText("Passo 1 de 9")).toBeInTheDocument();
     expect(screen.getByTestId("calc-level").textContent).toBe("basic");
 
-    // 2. adv-level spotlights the LevelToggle it flips: the engine runs the
-    // level switch, the harness mounts the gated sections, and the spotlight
-    // settles over the toggle itself.
+    // 2. adv-failure is the first gated step: the engine runs the level
+    // switch, the harness mounts the gated sections, and the spotlight
+    // settles over the failure section.
     fireEvent.click(screen.getByText("tutorial.next"));
     expect(
-      await screen.findByText("tutorial.steps.adv-level.title"),
+      await screen.findByText("tutorial.steps.adv-failure.title"),
     ).toBeInTheDocument();
     await vi.waitFor(() =>
       expect(screen.getByTestId("calc-level").textContent).toBe("advanced"),
     );
-    expect(screen.getByTestId("anchor-level-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("anchor-failure")).toBeInTheDocument();
     await vi.waitFor(
       () =>
         expect(
@@ -805,10 +806,9 @@ describe("tour: nivel-avancado", () => {
       { timeout: 2500 },
     );
 
-    // 3→8. The six gated sections are mounted now; each anchor resolves
-    // immediately (same-tab, post-level-switch).
+    // 3→7. The remaining gated sections resolve immediately (same-tab,
+    // post-level-switch).
     for (const [key, anchor] of [
-      ["adv-failure", "failure"],
       ["adv-hardware", "hardware"],
       ["adv-machine", "machine"],
       ["adv-fixedCost", "fixedCost"],
@@ -822,13 +822,13 @@ describe("tour: nivel-avancado", () => {
       expect(screen.getByTestId(`anchor-${anchor}`)).toBeInTheDocument();
     }
 
-    // 9. results (visible at every level) closes the anchored run.
+    // 8. results (visible at every level) closes the anchored run.
     fireEvent.click(screen.getByText("tutorial.next"));
     expect(
       await screen.findByText("tutorial.steps.adv-results.title"),
     ).toBeInTheDocument();
 
-    // 10. Centered closing card; finishing restores the pre-tour level.
+    // 9. Centered closing card; finishing restores the pre-tour level.
     fireEvent.click(screen.getByText("tutorial.next"));
     expect(
       await screen.findByText("tutorial.steps.adv-complete.title"),
