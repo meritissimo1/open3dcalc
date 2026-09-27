@@ -77,7 +77,7 @@ export function MachineSection({
             )
           }
           type="number"
-          unit="meses"
+          unit={t("bento.units.months")}
           tooltip={t("tooltip.depreciationMonths")}
         />
         <InputGroup
@@ -101,7 +101,7 @@ export function MachineSection({
             )
           }
           type="number"
-          unit="h/mês"
+          unit={t("bento.units.hoursPerMonth")}
           tooltip={t("tooltip.hoursPerMonth")}
         />
         <div className="@form:col-span-2 flex items-center justify-between surface rounded-xl p-4 sm:p-5">
