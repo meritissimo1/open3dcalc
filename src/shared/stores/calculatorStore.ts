@@ -166,7 +166,12 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
       postProcessingTimeMinutes: 0,
     }),
     fdmExtras: { ...DEFAULT_EXTRAS, ...loadStr("fdmExtras", {}) },
-    fdmSales: { ...DEFAULT_SALES, ...loadStr("fdmSales", {}) },
+    // Buma Labs fork: packaging is picked from Catalog; start without one.
+    fdmSales: {
+      ...DEFAULT_SALES,
+      packagingCost: 0,
+      ...loadStr("fdmSales", {}),
+    },
     fdmOps: { ...DEFAULT_OPS, ...loadStr("fdmOps", {}) },
     fdmSoft: { ...DEFAULT_SOFT, ...loadStr("fdmSoft", {}) },
 
@@ -596,7 +601,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           hourlyRate: catalogLaborRate(),
         },
         fdmExtras: { ...DEFAULT_EXTRAS },
-        fdmSales: { ...DEFAULT_SALES },
+        fdmSales: { ...DEFAULT_SALES, packagingCost: 0 },
         fdmOps: { ...DEFAULT_OPS },
         fdmSoft: { ...DEFAULT_SOFT },
         resinMaterial: { ...DEFAULT_RESIN_MATERIAL },

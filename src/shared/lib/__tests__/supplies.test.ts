@@ -85,6 +85,12 @@ describe("supplies helpers", () => {
 describe("calculator store picks", () => {
   beforeEach(() => useCalculatorStore.getState().resetCalculator());
 
+  it("starts without packaging until a size is picked", () => {
+    const state = useCalculatorStore.getState();
+    expect(state.packagingId).toBeNull();
+    expect(state.fdmSales.packagingCost).toBe(0);
+  });
+
   it("derives extrasCost from the picked parts", () => {
     useCalculatorStore.getState().setExtraSelections([
       { partId: "sw", name: "Switch", unitCost: 1.25, quantity: 4 },
