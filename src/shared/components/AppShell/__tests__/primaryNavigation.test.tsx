@@ -121,12 +121,12 @@ describe("primary navigation — the five always-available destinations", () => 
     expect(MORE_TABS.map((tab) => tab.id)).toEqual([...MORE_TAB_IDS]);
   });
 
-  it("labels the destinations Pricing, Dashboard, History, Printers, Spools", () => {
+  it("labels the destinations Pricing, Dashboard, History, Catalog, Spools", () => {
     expect(PRIMARY_LABEL_KEYS).toEqual([
       "nav.pricing",
       "nav.dashboard",
       "nav.history",
-      "nav.printers",
+      "nav.catalog",
       "nav.spools",
     ]);
   });

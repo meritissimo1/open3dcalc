@@ -73,6 +73,10 @@ const createMockStore = (overrides: Partial<MockStore> = {}): MockStore => ({
     packagingCost: 2, shippingCost: 0, taxPercent: 0, marketplaceFeePercent: 0, profitMarginPercent: 50,
   },
   results: { profit: 25, sellPrice: 100 },
+  extraSelections: [],
+  packagingId: null,
+  setExtraSelections: vi.fn(),
+  selectPackaging: vi.fn(),
   setQuantity: mockSetQuantity,
   setInfillPercent: mockSetInfillPercent,
   setFdmExtras: mockSetFdmExtras,
@@ -99,7 +103,11 @@ const mockMarketplaces = [
 vi.mock('@/shared/stores/catalogStore', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useCatalogStore: (selector?: any) => {
-    const state = { marketplaces: mockMarketplaces }
+    const state = {
+      marketplaces: mockMarketplaces,
+      extraParts: [],
+      packagings: [{ id: 'pkg_p', name: 'P', cost: 1.5, updatedAt: 0 }],
+    }
     return selector ? selector(state) : state
   },
 }))
@@ -192,8 +200,8 @@ describe('SalesSection', () => {
   it('shows marketplace select when field is visible', () => {
     render(<SalesSection />)
     expect(screen.getByText('calc.marketplace')).toBeInTheDocument()
-    // The Select component renders a <select> which has role combobox
-    const combobox = screen.getByRole('combobox')
+    // The Select component renders a trigger with role combobox
+    const combobox = screen.getByRole('combobox', { name: 'calc.marketplace' })
     expect(combobox).toBeInTheDocument()
   })
 

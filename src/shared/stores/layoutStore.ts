@@ -26,28 +26,6 @@ export const LAYOUT_STORAGE_KEY = "open3dcalc_layout_v1";
 export type LayoutMode = "classic" | "guided" | "bento";
 
 const DEFAULT_LAYOUT_MODE: LayoutMode = "classic";
-const VALID_LAYOUT_MODES: readonly LayoutMode[] = [
-  "classic",
-  "guided",
-  "bento",
-];
-
-function isLayoutMode(value: unknown): value is LayoutMode {
-  return (VALID_LAYOUT_MODES as readonly string[]).includes(value as string);
-}
-
-/** Read the persisted mode; any unknown/corrupt payload resolves to classic. */
-function loadLayoutMode(): LayoutMode {
-  if (typeof window === "undefined") return DEFAULT_LAYOUT_MODE;
-  try {
-    const saved = guardedStorage.getItem(LAYOUT_STORAGE_KEY);
-    if (!saved) return DEFAULT_LAYOUT_MODE;
-    const parsed: unknown = JSON.parse(saved);
-    return isLayoutMode(parsed) ? parsed : DEFAULT_LAYOUT_MODE;
-  } catch {
-    return DEFAULT_LAYOUT_MODE;
-  }
-}
 
 interface LayoutState {
   layoutMode: LayoutMode;
@@ -55,7 +33,9 @@ interface LayoutState {
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
-  layoutMode: loadLayoutMode(),
+  // Buma Labs fork: the layout switcher is hidden and the team always uses
+  // the classic calculator, so a previously saved mode is ignored.
+  layoutMode: DEFAULT_LAYOUT_MODE,
 
   setLayoutMode: (mode) => {
     guardedStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(mode));

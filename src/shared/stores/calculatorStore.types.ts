@@ -20,6 +20,8 @@ import type {
   FixedCosts,
   FdmSlicerProfile,
   FdmFilamentParams,
+  ExtraSelection,
+  PackagingOption,
 } from "@/shared/types";
 import { marketplaces } from "@/shared/lib/marketplace";
 import { printers } from "@/shared/lib/printers";
@@ -103,6 +105,12 @@ export interface CalculatorState {
 
   productName: string;
   setProductName: (name: string) => void;
+  /** Buma Labs fork: extra parts picked from the catalog (sets extrasCost). */
+  extraSelections: ExtraSelection[];
+  setExtraSelections: (items: ExtraSelection[]) => void;
+  /** Buma Labs fork: packaging picked from the catalog (sets packagingCost). */
+  packagingId: string | null;
+  selectPackaging: (option: PackagingOption | null) => void;
   calcLevel: CalcLevel;
   setCalcLevel: (v: CalcLevel) => void;
   hiddenFields: string[];

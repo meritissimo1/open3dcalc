@@ -7,6 +7,7 @@ import { useCalculatorStore } from "@/shared/stores/calculatorStore";
 import { useCatalogStore } from "@/shared/stores/catalogStore";
 import { useCurrency } from "@/shared/hooks/useCurrency";
 import { SectionHeader } from "./SectionHeader";
+import { ExtrasPicker, PackagingPicker } from "./SupplyPickers";
 import { DerivedMarginDisplay } from "../DerivedMarginDisplay";
 import { isFieldVisibleForLevel } from "../Calculator.constants";
 
@@ -80,49 +81,9 @@ export function SalesSection() {
             />
           )}
         </div>
-        {isFieldVisible("sales", "extrasCost") && (
-          <InputGroup
-            label={t("calc.extras")}
-            value={
-              isFDM ? store.fdmExtras.extrasCost : store.resinExtras.extrasCost
-            }
-            onChange={(v) =>
-              handleInput(v, (val) =>
-                isFDM
-                  ? store.setFdmExtras({ extrasCost: val })
-                  : store.setResinExtras({ extrasCost: val }),
-              )
-            }
-            type="number"
-            prefix={currencySymbol}
-            tooltip={t("tooltip.extras")}
-          />
-        )}
+        {isFieldVisible("sales", "extrasCost") && <ExtrasPicker />}
         <div className="grid grid-cols-1 @form:grid-cols-2 gap-3">
-          <InputGroup
-            label={t("calc.packaging")}
-            value={
-              isFDM
-                ? store.fdmSales.packagingCost
-                : store.resinSales.packagingCost
-            }
-            onChange={(v) =>
-              handleInput(v, (val) =>
-                isFDM
-                  ? store.setFdmSales({
-                      ...store.fdmSales,
-                      packagingCost: val,
-                    })
-                  : store.setResinSales({
-                      ...store.resinSales,
-                      packagingCost: val,
-                    }),
-              )
-            }
-            type="number"
-            prefix={currencySymbol}
-            tooltip={t("tooltip.packaging")}
-          />
+          <PackagingPicker />
           {isFieldVisible("sales", "shippingCost") && (
             <InputGroup
               label={t("calc.shipping")}
