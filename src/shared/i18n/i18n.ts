@@ -19,11 +19,13 @@ i18n
     },
     ns: ["translation", "share"],
     defaultNS: "translation",
-    fallbackLng: "pt-BR",
+    // Buma Labs fork: the site defaults to English (index*.html declare
+    // lang="en-US"); Portuguese stays available from the language toggle.
+    fallbackLng: "en-US",
     interpolation: { escapeValue: false },
     detection: {
       // D2: `htmlTag` sits ahead of `navigator` so the language i18next picks
-      // matches the static `lang="pt-BR"` declared in index.html / index.web.html.
+      // matches the static `lang` declared in index.html / index.web.html.
       // With only `[localStorage, navigator]` a first-time visitor whose browser
       // reports en-US got en-US while the document still declared pt-BR — a
       // mixed-language state until `languageChanged` caught up. Honoring the
