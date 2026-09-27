@@ -31,16 +31,23 @@ describe("ProductInventory UI behavior", () => {
       screen.getByRole("button", { name: "products.newProduct" }),
     );
     await user.type(screen.getByLabelText("products.name"), "Suporte Headset");
-    await user.type(screen.getByLabelText("products.weight"), "85");
+    await user.type(screen.getByLabelText("products.printTime"), "2");
     await user.type(screen.getByLabelText("products.cost"), "12.5");
-    await user.type(screen.getByLabelText("products.price"), "39.9");
+    await user.type(screen.getByLabelText("products.inPersonPrice"), "35");
+    await user.type(screen.getByLabelText("products.onlinePrice"), "39.9");
     await user.click(screen.getByRole("button", { name: "common.save" }));
 
     expect(screen.getByText("Suporte Headset")).toBeInTheDocument();
-    expect(useProductInventory.getState().products).toHaveLength(1);
+    expect(useProductInventory.getState().products[0]).toMatchObject({
+      status: "testing",
+      printTimeHours: 2,
+      costPrice: 12.5,
+      inPersonPrice: 35,
+      salePrice: 39.9,
+    });
   });
 
-  it("warns (without blocking) when sale price is below cost", async () => {
+  it("warns (without blocking) when a price is below cost", async () => {
     const user = userEvent.setup();
     render(<ProductInventory />);
 
@@ -49,7 +56,7 @@ describe("ProductInventory UI behavior", () => {
     );
     await user.type(screen.getByLabelText("products.name"), "Peça Barata");
     await user.type(screen.getByLabelText("products.cost"), "50");
-    await user.type(screen.getByLabelText("products.price"), "10");
+    await user.type(screen.getByLabelText("products.inPersonPrice"), "10");
 
     // Warn appears live in the form…
     expect(
@@ -61,28 +68,10 @@ describe("ProductInventory UI behavior", () => {
     expect(screen.getByText("Peça Barata")).toBeInTheDocument();
   });
 
-  it("toggles sold status via checkbox", async () => {
-    const user = userEvent.setup();
-    useProductInventory.getState().addProduct({
-      name: "Vaso Espiral",
-      weightGrams: 100,
-      filamentType: "PLA",
-      costPrice: 8,
-      salePrice: 29.9,
-    });
-    render(<ProductInventory />);
-
-    const toggle = screen.getByRole("checkbox", { name: /products\.sold/ });
-    expect(toggle).not.toBeChecked();
-    await user.click(toggle);
-    expect(toggle).toBeChecked();
-    expect(useProductInventory.getState().products[0].sold).toBe(true);
-  });
-
-  it("filters by search text and sold status", async () => {
+  it("changes the status inline and filters by status", async () => {
     const user = userEvent.setup();
     const api = useProductInventory.getState();
-    const id = api.addProduct({
+    api.addProduct({
       name: "Suporte Headset",
       weightGrams: 85,
       filamentType: "PLA",
@@ -96,7 +85,44 @@ describe("ProductInventory UI behavior", () => {
       costPrice: 8,
       salePrice: 29,
     });
-    useProductInventory.getState().markSold(id, true);
+    render(<ProductInventory />);
+
+    await user.selectOptions(
+      screen.getByLabelText("products.status: Suporte Headset"),
+      "active",
+    );
+    expect(useProductInventory.getState().products[0].status).toBe("active");
+
+    fireEvent.change(screen.getByLabelText("products.status"), {
+      target: { value: "active" },
+    });
+    expect(screen.getByText("Suporte Headset")).toBeInTheDocument();
+    expect(screen.queryByText("Vaso Espiral")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("products.status"), {
+      target: { value: "testing" },
+    });
+    expect(screen.queryByText("Suporte Headset")).not.toBeInTheDocument();
+    expect(screen.getByText("Vaso Espiral")).toBeInTheDocument();
+  });
+
+  it("filters by search text", async () => {
+    const user = userEvent.setup();
+    const api = useProductInventory.getState();
+    api.addProduct({
+      name: "Suporte Headset",
+      weightGrams: 85,
+      filamentType: "PLA",
+      costPrice: 12,
+      salePrice: 39,
+    });
+    api.addProduct({
+      name: "Vaso Espiral",
+      weightGrams: 100,
+      filamentType: "PETG",
+      costPrice: 8,
+      salePrice: 29,
+    });
     render(<ProductInventory />);
 
     await user.type(
@@ -105,13 +131,66 @@ describe("ProductInventory UI behavior", () => {
     );
     expect(screen.queryByText("Suporte Headset")).not.toBeInTheDocument();
     expect(screen.getByText("Vaso Espiral")).toBeInTheDocument();
+  });
 
-    await user.clear(screen.getByPlaceholderText("products.searchPlaceholder"));
-    fireEvent.change(screen.getByLabelText("products.status"), {
-      target: { value: "sold" },
+  it("sorts by online profit per hour, products without it last", async () => {
+    const user = userEvent.setup();
+    const api = useProductInventory.getState();
+    // (30 - 10) / 2h = 10/h
+    api.addProduct({
+      name: "Slow",
+      weightGrams: 0,
+      filamentType: "",
+      costPrice: 10,
+      salePrice: 30,
+      printTimeHours: 2,
     });
-    expect(screen.getByText("Suporte Headset")).toBeInTheDocument();
-    expect(screen.queryByText("Vaso Espiral")).not.toBeInTheDocument();
+    // no price yet
+    api.addProduct({
+      name: "Draft",
+      weightGrams: 0,
+      filamentType: "",
+      costPrice: 5,
+      salePrice: 0,
+      printTimeHours: 1,
+    });
+    // (25 - 5) / 1h = 20/h
+    api.addProduct({
+      name: "Fast",
+      weightGrams: 0,
+      filamentType: "",
+      costPrice: 5,
+      salePrice: 25,
+      printTimeHours: 1,
+    });
+    render(<ProductInventory />);
+
+    await user.click(
+      screen.getByRole("button", { name: /products\.profitOnline/ }),
+    );
+
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(rows.map((r) => r.textContent)).toEqual([
+      expect.stringContaining("Fast"),
+      expect.stringContaining("Slow"),
+      expect.stringContaining("Draft"),
+    ]);
+  });
+
+  it("links the product name when a link is set", () => {
+    useProductInventory.getState().addProduct({
+      name: "Chaveiro",
+      weightGrams: 0,
+      filamentType: "",
+      costPrice: 3,
+      salePrice: 0,
+      link: "https://example.com/chaveiro",
+    });
+    render(<ProductInventory />);
+    expect(screen.getByRole("link", { name: /Chaveiro/ })).toHaveAttribute(
+      "href",
+      "https://example.com/chaveiro",
+    );
   });
 
   it("exports CSV via Blob download", async () => {

@@ -90,11 +90,54 @@ describe('useProductInventory (integration)', () => {
     useProductInventory.getState().addProduct({ ...BASE_FORM, name: 'Vaso "Espiral", grande' })
     const csv = exportProductsCSV()
     const lines = csv.split('\n')
-    expect(lines[0]).toBe('id,name,weightGrams,filamentType,costPrice,salePrice,sold,createdAt,updatedAt')
+    expect(lines[0]).toBe(
+      'id,name,weightGrams,filamentType,costPrice,salePrice,sold,createdAt,updatedAt,status,link,printTimeHours,inPersonPrice',
+    )
     expect(lines).toHaveLength(3)
     expect(lines[1]).toContain('Suporte Headset')
     // CSV-escapes quotes and commas.
     expect(lines[2]).toContain('"Vaso ""Espiral"", grande"')
+  })
+
+  it('upsertFromCalculator() creates a "testing" product without prices', () => {
+    const id = useProductInventory.getState().upsertFromCalculator({
+      name: 'Chaveiro',
+      weightGrams: 12,
+      filamentType: 'PLA',
+      costPrice: 3.2,
+      printTimeHours: 0.5,
+      link: 'https://example.com/c',
+    })
+    expect(useProductInventory.getState().getProduct(id)).toMatchObject({
+      status: 'testing',
+      costPrice: 3.2,
+      printTimeHours: 0.5,
+      link: 'https://example.com/c',
+      salePrice: 0,
+      inPersonPrice: 0,
+    })
+  })
+
+  it('upsertFromCalculator() refreshes calculated fields and keeps manual ones', () => {
+    const api = useProductInventory.getState()
+    const id = api.addProduct({ ...BASE_FORM, name: 'Chaveiro', status: 'active', inPersonPrice: 9 })
+    const again = api.upsertFromCalculator({
+      name: '  chaveiro ',
+      weightGrams: 12,
+      filamentType: 'PLA',
+      costPrice: 4,
+      printTimeHours: 0.75,
+    })
+    expect(again).toBe(id)
+    const products = useProductInventory.getState().products
+    expect(products).toHaveLength(1)
+    expect(products[0]).toMatchObject({
+      costPrice: 4,
+      printTimeHours: 0.75,
+      status: 'active',
+      inPersonPrice: 9,
+      salePrice: BASE_FORM.salePrice,
+    })
   })
 
   it('searchProducts() filters by name or filament (case-insensitive)', () => {

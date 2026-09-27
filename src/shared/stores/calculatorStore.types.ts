@@ -106,6 +106,9 @@ export interface CalculatorState {
 
   productName: string;
   setProductName: (name: string) => void;
+  /** Buma Labs fork: link (store page, reference…) carried to Products. */
+  productLink: string;
+  setProductLink: (link: string) => void;
   /** Buma Labs fork: extra parts picked from the catalog (sets extrasCost). */
   extraSelections: ExtraSelection[];
   setExtraSelections: (items: ExtraSelection[]) => void;

@@ -451,7 +451,7 @@
   },
   "products": {
     "title": "Produtos",
-    "subtitle": "Cadastre produtos à venda e marque como vendidos.",
+    "subtitle": "Todo cálculo salvo com nome vem para cá com o custo preenchido. Defina status e preços para organizar o catálogo.",
     "newProduct": "Novo Produto",
     "editProduct": "Editar Produto",
     "name": "Nome",
@@ -468,7 +468,20 @@
     "searchPlaceholder": "Buscar por nome ou filamento...",
     "deleteConfirm": "Tem certeza que deseja excluir este produto?",
     "belowCostWarn": "Preço abaixo do custo — apenas um aviso, o salvamento continua permitido.",
-    "exportCsv": "Exportar CSV"
+    "exportCsv": "Exportar CSV",
+    "link": "Link",
+    "linkPlaceholder": "Link do produto (opcional)",
+    "printTime": "Tempo de impressão",
+    "inPersonPrice": "Preço presencial",
+    "onlinePrice": "Preço online",
+    "profitInPerson": "Lucro/h presencial",
+    "profitOnline": "Lucro/h online",
+    "statuses": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "testing": "A testar",
+      "paused": "Pausado"
+    }
   },
   "inventory": {
     "title": "Estoque",
@@ -828,6 +841,7 @@
     "productNamePrompt": "Nome do produto:",
     "productNeedsName": "Informe o nome do produto para cadastrá-lo.",
     "productRegistered": "Produto cadastrado!",
+    "productUpdated": "Produto atualizado em Produtos.",
     "productDuplicateWarn": "Já existe um produto com esse nome — cadastrado mesmo assim.",
     "viewProducts": "Ver no inventário",
     "details": "Detalhes",

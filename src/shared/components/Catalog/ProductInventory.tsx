@@ -2,12 +2,15 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useProductInventory,
-  isBelowCost,
   exportProductsCSV,
 } from "@/shared/stores/productInventory";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ExternalLink,
   Package,
   Plus,
   Pencil,
@@ -15,30 +18,62 @@ import {
   Search,
   Download,
 } from "lucide-react";
-import type { Product } from "@/shared/types";
+import type { Product, ProductStatus } from "@/shared/types";
 import { downloadBlob } from "@/shared/lib/download";
+import {
+  PRODUCT_STATUSES,
+  productStatus,
+  profitPerHour,
+  sortProducts,
+  type ProductSortKey,
+} from "@/shared/lib/productMetrics";
 import { DemoExportBadge } from "@/shared/components/DemoMode/DemoExportBadge";
 import { useCurrency } from "@/shared/hooks/useCurrency";
 
 interface ProductFormState {
   name: string;
-  weightGrams: string;
-  filamentType: string;
+  link: string;
+  status: ProductStatus;
+  printTimeHours: string;
   costPrice: string;
+  inPersonPrice: string;
   salePrice: string;
+}
+
+interface ProductFormValues {
+  name: string;
+  link: string;
+  status: ProductStatus;
+  printTimeHours: number;
+  costPrice: number;
+  inPersonPrice: number;
+  salePrice: number;
 }
 
 const EMPTY_FORM: ProductFormState = {
   name: "",
-  weightGrams: "",
-  filamentType: "",
+  link: "",
+  status: "testing",
+  printTimeHours: "",
   costPrice: "",
+  inPersonPrice: "",
   salePrice: "",
 };
 
 const toNumber = (s: string): number => {
   const n = parseFloat(s.replace(",", "."));
   return Number.isFinite(n) && n >= 0 ? n : 0;
+};
+
+/** Warn-only: a price that was set but doesn't cover the cost. */
+const belowCost = (price: number | undefined, cost: number) =>
+  !!price && price > 0 && price < cost;
+
+const STATUS_BADGE: Record<ProductStatus, string> = {
+  active: "bg-[var(--positive-subtle)] text-[var(--positive)]",
+  inactive: "bg-[var(--surface-sunken)] text-[var(--text-secondary)]",
+  testing: "bg-[var(--info-subtle)] text-[var(--info)]",
+  paused: "bg-[var(--warning-subtle)] text-[var(--warning)]",
 };
 
 function ProductFormModal({
@@ -48,13 +83,7 @@ function ProductFormModal({
 }: {
   product: Product | null;
   onClose: () => void;
-  onSave: (data: {
-    name: string;
-    weightGrams: number;
-    filamentType: string;
-    costPrice: number;
-    salePrice: number;
-  }) => void;
+  onSave: (data: ProductFormValues) => void;
 }) {
   const { t } = useTranslation();
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -62,10 +91,14 @@ function ProductFormModal({
     product
       ? {
           name: product.name,
-          weightGrams: String(product.weightGrams),
-          filamentType: product.filamentType,
+          link: product.link ?? "",
+          status: productStatus(product),
+          printTimeHours: String(product.printTimeHours ?? ""),
           costPrice: String(product.costPrice),
-          salePrice: String(product.salePrice),
+          inPersonPrice: product.inPersonPrice
+            ? String(product.inPersonPrice)
+            : "",
+          salePrice: product.salePrice ? String(product.salePrice) : "",
         }
       : EMPTY_FORM,
   );
@@ -78,22 +111,49 @@ function ProductFormModal({
     return () => clearTimeout(timer);
   }, []);
 
-  const belowCost = toNumber(form.salePrice) < toNumber(form.costPrice);
+  const cost = toNumber(form.costPrice);
+  const warnBelowCost =
+    belowCost(toNumber(form.salePrice), cost) ||
+    belowCost(toNumber(form.inPersonPrice), cost);
   const canSave = form.name.trim().length >= 2;
 
   const handleSubmit = () => {
     if (!canSave) return;
     onSave({
       name: form.name.trim(),
-      weightGrams: toNumber(form.weightGrams),
-      filamentType: form.filamentType.trim(),
-      costPrice: toNumber(form.costPrice),
+      link: form.link.trim(),
+      status: form.status,
+      printTimeHours: toNumber(form.printTimeHours),
+      costPrice: cost,
+      inPersonPrice: toNumber(form.inPersonPrice),
       salePrice: toNumber(form.salePrice),
     });
   };
 
   const inputCls =
     "w-full px-3 py-2 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none";
+  const labelCls =
+    "block text-xs font-medium text-[var(--color-text-secondary)] mb-1";
+
+  const numberField = (
+    id: string,
+    label: string,
+    key: "printTimeHours" | "costPrice" | "inPersonPrice" | "salePrice",
+  ) => (
+    <div>
+      <label htmlFor={id} className={labelCls}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        value={form[key]}
+        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        className={inputCls}
+      />
+    </div>
+  );
 
   return (
     <div
@@ -114,10 +174,7 @@ function ProductFormModal({
         </h3>
         <div className="space-y-3">
           <div>
-            <label
-              htmlFor="product-name"
-              className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1"
-            >
+            <label htmlFor="product-name" className={labelCls}>
               {t("products.name")}
             </label>
             <input
@@ -129,86 +186,62 @@ function ProductFormModal({
               className={inputCls}
             />
           </div>
+          <div>
+            <label htmlFor="product-link" className={labelCls}>
+              {t("products.link")}
+            </label>
+            <input
+              id="product-link"
+              type="url"
+              value={form.link}
+              onChange={(e) => setForm({ ...form, link: e.target.value })}
+              placeholder="https://"
+              className={inputCls}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label
-                htmlFor="product-weight"
-                className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1"
-              >
-                {t("products.weight")}
+              <label htmlFor="product-status" className={labelCls}>
+                {t("products.status")}
               </label>
-              <input
-                id="product-weight"
-                type="number"
-                min="0"
-                step="any"
-                value={form.weightGrams}
+              <select
+                id="product-status"
+                value={form.status}
                 onChange={(e) =>
-                  setForm({ ...form, weightGrams: e.target.value })
+                  setForm({ ...form, status: e.target.value as ProductStatus })
                 }
                 className={inputCls}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="product-filament"
-                className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1"
               >
-                {t("products.filament")}
-              </label>
-              <input
-                id="product-filament"
-                type="text"
-                value={form.filamentType}
-                onChange={(e) =>
-                  setForm({ ...form, filamentType: e.target.value })
-                }
-                className={inputCls}
-              />
+                {PRODUCT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`products.statuses.${s}`)}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div>
-              <label
-                htmlFor="product-cost"
-                className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1"
-              >
-                {t("products.cost")}
-              </label>
-              <input
-                id="product-cost"
-                type="number"
-                min="0"
-                step="any"
-                value={form.costPrice}
-                onChange={(e) =>
-                  setForm({ ...form, costPrice: e.target.value })
-                }
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="product-price"
-                className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1"
-              >
-                {t("products.price")}
-              </label>
-              <input
-                id="product-price"
-                type="number"
-                min="0"
-                step="any"
-                value={form.salePrice}
-                onChange={(e) =>
-                  setForm({ ...form, salePrice: e.target.value })
-                }
-                className={inputCls}
-              />
-            </div>
+            {numberField(
+              "product-print-time",
+              t("products.printTime"),
+              "printTimeHours",
+            )}
           </div>
-          {belowCost && (
+          <div className="grid grid-cols-3 gap-3">
+            {numberField("product-cost", t("products.cost"), "costPrice")}
+            {numberField(
+              "product-in-person",
+              t("products.inPersonPrice"),
+              "inPersonPrice",
+            )}
+            {numberField(
+              "product-online",
+              t("products.onlinePrice"),
+              "salePrice",
+            )}
+          </div>
+          {warnBelowCost && (
             <p
-              role="alert"
-              className="flex items-center gap-1.5 text-xs font-medium text-amber-400"
+              role="status"
+              className="flex items-center gap-1.5 text-xs text-amber-400"
             >
               <AlertTriangle
                 className="h-3.5 w-3.5 shrink-0"
@@ -238,45 +271,97 @@ function ProductFormModal({
   );
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+}: {
+  label: string;
+  sortKey: ProductSortKey;
+  sort: { key: ProductSortKey; direction: "asc" | "desc" } | null;
+  onSort: (key: ProductSortKey) => void;
+}) {
+  const active = sort?.key === sortKey;
+  const Icon = !active
+    ? ArrowUpDown
+    : sort.direction === "asc"
+      ? ArrowUp
+      : ArrowDown;
+  return (
+    <th
+      className="py-2 pr-3"
+      aria-sort={
+        active
+          ? sort.direction === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none rounded"
+      >
+        {label}
+        <Icon className="w-3 h-3" aria-hidden="true" />
+      </button>
+    </th>
+  );
+}
+
 export function ProductInventory() {
   const { t } = useTranslation();
-  const { symbol: currencySymbol } = useCurrency();
+  const { format } = useCurrency();
   const products = useProductInventory((s) => s.products);
   const addProduct = useProductInventory((s) => s.addProduct);
   const updateProduct = useProductInventory((s) => s.updateProduct);
   const removeProduct = useProductInventory((s) => s.removeProduct);
-  const markSold = useProductInventory((s) => s.markSold);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "available" | "sold"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>(
+    "all",
+  );
+  const [sort, setSort] = useState<{
+    key: ProductSortKey;
+    direction: "asc" | "desc";
+  } | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
+  const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return products.filter((p) => {
-      if (statusFilter === "sold" && !p.sold) return false;
-      if (statusFilter === "available" && p.sold) return false;
+    const filtered = products.filter((p) => {
+      if (statusFilter !== "all" && productStatus(p) !== statusFilter)
+        return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
         (p.filamentType && p.filamentType.toLowerCase().includes(q))
       );
     });
-  }, [products, search, statusFilter]);
+    return sort ? sortProducts(filtered, sort.key, sort.direction) : filtered;
+  }, [products, search, statusFilter, sort]);
 
-  const handleSave = (data: {
-    name: string;
-    weightGrams: number;
-    filamentType: string;
-    costPrice: number;
-    salePrice: number;
-  }) => {
+  // Higher is usually what matters for profit; lower for cost and time.
+  const handleSort = (key: ProductSortKey) =>
+    setSort((prev) =>
+      prev?.key === key
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : {
+            key,
+            direction:
+              key === "profitInPerson" || key === "profitOnline"
+                ? "desc"
+                : "asc",
+          },
+    );
+
+  const handleSave = (data: ProductFormValues) => {
     if (editing) updateProduct(editing.id, data);
-    else addProduct(data);
+    else addProduct({ ...data, weightGrams: 0, filamentType: "" });
     setEditing(null);
     setFormOpen(false);
   };
@@ -287,6 +372,11 @@ export function ProductInventory() {
       "products.csv",
     );
   };
+
+  const money = (value: number | undefined) =>
+    value && value > 0 ? format(value) : "—";
+  const perHour = (value: number | null) =>
+    value === null ? "—" : `${format(value)}/h`;
 
   return (
     <div className="surface rounded-xl p-5 animate-fade-in">
@@ -341,17 +431,20 @@ export function ProductInventory() {
           aria-label={t("products.status")}
           value={statusFilter}
           onChange={(e) =>
-            setStatusFilter(e.target.value as "all" | "available" | "sold")
+            setStatusFilter(e.target.value as "all" | ProductStatus)
           }
           className="px-3 py-2 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
         >
           <option value="all">{t("products.filterAll")}</option>
-          <option value="available">{t("products.filterAvailable")}</option>
-          <option value="sold">{t("products.filterSold")}</option>
+          {PRODUCT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {t(`products.statuses.${s}`)}
+            </option>
+          ))}
         </select>
       </div>
 
-      {filtered.length === 0 ? (
+      {visible.length === 0 ? (
         <p className="text-sm text-[var(--color-text-muted)] text-center py-8">
           {t("products.noProducts")}
         </p>
@@ -360,80 +453,152 @@ export function ProductInventory() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                <th className="py-2 pr-3">{t("products.status")}</th>
                 <th className="py-2 pr-3">{t("products.name")}</th>
-                <th className="py-2 pr-3">{t("products.weight")}</th>
-                <th className="py-2 pr-3">{t("products.filament")}</th>
-                <th className="py-2 pr-3">{t("products.cost")}</th>
-                <th className="py-2 pr-3">{t("products.price")}</th>
-                <th className="py-2 pr-3">{t("products.sold")}</th>
+                <SortHeader
+                  label={t("products.printTime")}
+                  sortKey="printTime"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortHeader
+                  label={t("products.cost")}
+                  sortKey="cost"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <th className="py-2 pr-3">{t("products.inPersonPrice")}</th>
+                <th className="py-2 pr-3">{t("products.onlinePrice")}</th>
+                <SortHeader
+                  label={t("products.profitInPerson")}
+                  sortKey="profitInPerson"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortHeader
+                  label={t("products.profitOnline")}
+                  sortKey="profitOnline"
+                  sort={sort}
+                  onSort={handleSort}
+                />
                 <th className="py-2">
                   <span className="sr-only">{t("common.actions")}</span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-[var(--color-border)] last:border-0"
-                >
-                  <td className="py-2 pr-3 font-medium text-[var(--color-text-primary)]">
-                    {p.name}
-                    {isBelowCost(p) && (
-                      <span
-                        title={t("products.belowCostWarn")}
-                        className="ml-2 text-amber-400"
-                        aria-label={t("products.belowCostWarn")}
+              {visible.map((p) => {
+                const status = productStatus(p);
+                const warn =
+                  belowCost(p.salePrice, p.costPrice) ||
+                  belowCost(p.inPersonPrice, p.costPrice);
+                return (
+                  <tr
+                    key={p.id}
+                    className="border-b border-[var(--color-border)] last:border-0"
+                  >
+                    <td className="py-2 pr-3">
+                      <select
+                        aria-label={`${t("products.status")}: ${p.name}`}
+                        value={status}
+                        onChange={(e) =>
+                          updateProduct(p.id, {
+                            status: e.target.value as ProductStatus,
+                          })
+                        }
+                        className={`rounded-full px-2 py-1 text-xs font-medium border-0 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none ${STATUS_BADGE[status]}`}
                       >
-                        <AlertTriangle
-                          className="h-3.5 w-3.5"
-                          aria-hidden="true"
-                        />
+                        {PRODUCT_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {t(`products.statuses.${s}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-2 pr-3 font-medium text-[var(--color-text-primary)]">
+                      <span className="inline-flex items-center gap-1.5">
+                        {p.link ? (
+                          <a
+                            href={p.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 hover:text-[var(--color-accent)] underline-offset-2 hover:underline"
+                          >
+                            {p.name}
+                            <ExternalLink
+                              className="w-3 h-3"
+                              aria-hidden="true"
+                            />
+                          </a>
+                        ) : (
+                          p.name
+                        )}
+                        {warn && (
+                          <span
+                            title={t("products.belowCostWarn")}
+                            className="text-amber-400"
+                            aria-label={t("products.belowCostWarn")}
+                          >
+                            <AlertTriangle
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
-                    {p.weightGrams} g
-                  </td>
-                  <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
-                    {p.filamentType || "—"}
-                  </td>
-                  <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
-                    {currencySymbol} {p.costPrice.toFixed(2)}
-                  </td>
-                  <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
-                    {currencySymbol} {p.salePrice.toFixed(2)}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <input
-                      type="checkbox"
-                      aria-label={`${t("products.sold")}: ${p.name}`}
-                      checked={p.sold}
-                      onChange={(e) => markSold(p.id, e.target.checked)}
-                      className="w-4 h-4 accent-[var(--color-accent)]"
-                    />
-                  </td>
-                  <td className="py-2 flex gap-1">
-                    <button
-                      onClick={() => {
-                        setEditing(p);
-                        setFormOpen(true);
-                      }}
-                      aria-label={`${t("common.edit")}: ${p.name}`}
-                      className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(p.id)}
-                      aria-label={`${t("common.delete")}: ${p.name}`}
-                      className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-red-400 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {p.printTimeHours ? `${p.printTimeHours} h` : "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {format(p.costPrice)}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {money(p.inPersonPrice)}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {money(p.salePrice)}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {perHour(
+                        profitPerHour(
+                          p.inPersonPrice,
+                          p.costPrice,
+                          p.printTimeHours,
+                        ),
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {perHour(
+                        profitPerHour(
+                          p.salePrice,
+                          p.costPrice,
+                          p.printTimeHours,
+                        ),
+                      )}
+                    </td>
+                    <td className="py-2 flex gap-1">
+                      <button
+                        onClick={() => {
+                          setEditing(p);
+                          setFormOpen(true);
+                        }}
+                        aria-label={`${t("common.edit")}: ${p.name}`}
+                        className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(p.id)}
+                        aria-label={`${t("common.delete")}: ${p.name}`}
+                        className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-red-400 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -211,7 +211,9 @@ describe("ResultsPanel — editable sell price (display-local override)", () => 
 });
 
 describe("ResultsPanel — calculator → product bridge", () => {
-  it("registers a product with the on-screen price and shows inventory link", async () => {
+  // Buma Labs fork: registering fills the calculated fields only; prices
+  // are set by hand in the Products tab.
+  it("registers a product with its cost and shows inventory link", async () => {
     const user = userEvent.setup();
     const goProducts = vi.fn();
     window.addEventListener("open3dcalc:go-products", goProducts);
@@ -225,7 +227,7 @@ describe("ResultsPanel — calculator → product bridge", () => {
     expect(products).toHaveLength(1);
     expect(products[0].name).toBe("Vaso Teste");
     expect(products[0].costPrice).toBe(60);
-    expect(products[0].salePrice).toBe(105.88);
+    expect(products[0].salePrice).toBe(0);
     expect(products[0].weightGrams).toBe(85);
     expect(screen.getByRole("status")).toHaveTextContent(
       "results.productRegistered",
@@ -238,26 +240,7 @@ describe("ResultsPanel — calculator → product bridge", () => {
     window.removeEventListener("open3dcalc:go-products", goProducts);
   });
 
-  it("uses the override price when registering", async () => {
-    const user = userEvent.setup();
-    render(<ResultsPanel variant="mobile" />);
-
-    await user.click(
-      screen.getByRole("button", { name: "calc.sellPriceEdit" }),
-    );
-    await user.clear(screen.getByLabelText("calc.sellPriceInputLabel"));
-    await user.type(screen.getByLabelText("calc.sellPriceInputLabel"), "120");
-    await user.click(
-      screen.getByRole("button", { name: "calc.sellPriceConfirm" }),
-    );
-
-    await user.click(
-      screen.getByRole("button", { name: "results.registerProduct" }),
-    );
-    expect(useProductInventory.getState().products[0].salePrice).toBe(120);
-  });
-
-  it("warns (without blocking) on duplicate product names", async () => {
+  it("updates the product with the same name instead of duplicating it", async () => {
     const user = userEvent.setup();
     useProductInventory.getState().addProduct({
       name: "Vaso Teste",
@@ -272,10 +255,12 @@ describe("ResultsPanel — calculator → product bridge", () => {
       screen.getByRole("button", { name: "results.registerProduct" }),
     );
 
-    // warn-only: second product is still created
-    expect(useProductInventory.getState().products).toHaveLength(2);
+    const products = useProductInventory.getState().products;
+    expect(products).toHaveLength(1);
+    expect(products[0].costPrice).toBe(60);
+    expect(products[0].salePrice).toBe(15);
     expect(screen.getByRole("status")).toHaveTextContent(
-      "results.productDuplicateWarn",
+      "results.productUpdated",
     );
   });
 

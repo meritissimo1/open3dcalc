@@ -42,6 +42,8 @@ export function ProductActionsCard({
   const {
     results,
     productName,
+    productLink,
+    printTimeHours,
     addToHistory,
     activeTab,
     fdmType,
@@ -51,6 +53,8 @@ export function ProductActionsCard({
     useShallow((s) => ({
       results: s.results,
       productName: s.productName,
+      productLink: s.productLink,
+      printTimeHours: s.fdmPrintParams.printTimeHours,
       addToHistory: s.addToHistory,
       activeTab: s.activeTab,
       fdmType: s.fdmMaterial.type,
@@ -127,15 +131,24 @@ export function ProductActionsCard({
       totalCost: results.totalCost,
       displaySellPrice,
     });
-    const duplicate = isDuplicateProductName(
+    const existed = isDuplicateProductName(
       name,
       useProductInventory.getState().products,
     );
-    useProductInventory.getState().addProduct(data);
+    // Buma Labs fork: same name updates the product instead of duplicating
+    // it; prices stay manual in the Products tab.
+    useProductInventory.getState().upsertFromCalculator({
+      name: data.name,
+      weightGrams: data.weightGrams,
+      filamentType: data.filamentType,
+      costPrice: data.costPrice,
+      printTimeHours,
+      link: productLink.trim(),
+    });
     setProductMsg({
-      kind: duplicate ? "warn" : "success",
-      text: duplicate
-        ? t("results.productDuplicateWarn")
+      kind: "success",
+      text: existed
+        ? t("results.productUpdated")
         : t("results.productRegistered"),
     });
   };
