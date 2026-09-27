@@ -568,11 +568,20 @@ function applyCatalog(
     laborCategories?: unknown[];
     laborHourlyRate?: number;
   }>(KEYS.catalog, {});
-  const localPrinters = Array.isArray(local.printers) ? local.printers : [];
-  const localMaterials = Array.isArray(local.materials) ? local.materials : [];
+  // Buma Labs fork: a browser that never saved its catalog only has the
+  // built-in defaults in memory. Start from them, otherwise the import
+  // would write back just the custom items and drop every built-in
+  // printer, filament and marketplace.
+  const defaults = useCatalogStore.getState();
+  const localPrinters = Array.isArray(local.printers)
+    ? local.printers
+    : defaults.printers;
+  const localMaterials = Array.isArray(local.materials)
+    ? local.materials
+    : defaults.materials;
   const localMarketplaces = Array.isArray(local.marketplaces)
     ? local.marketplaces
-    : [];
+    : defaults.marketplaces;
 
   const importedPrinters = data.printers.filter(isCustomItem);
   const importedMaterials = data.materials.filter(isCustomItem);
