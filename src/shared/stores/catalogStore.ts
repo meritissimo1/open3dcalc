@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Material, PrinterProfile, Marketplace } from "@/shared/types";
-import { fdmMaterials, resinMaterials } from "@/shared/lib/materials";
+import { fdmMaterials } from "@/shared/lib/materials";
+import { DEFAULT_FDM_MATERIAL_IDS } from "@/shared/lib/forkLocks";
 import { printers } from "@/shared/lib/printers";
 import { marketplaces } from "@/shared/lib/marketplace";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
@@ -42,7 +43,10 @@ interface CatalogState {
 
 const cloneDefaults = () => ({
   printers: withTags(printers.map((p) => ({ ...p }))),
-  materials: [...fdmMaterials, ...resinMaterials].map((m) => ({ ...m })),
+  // Buma Labs fork: FDM only, seeded with the team's filament types.
+  materials: fdmMaterials
+    .filter((m) => DEFAULT_FDM_MATERIAL_IDS.includes(m.id))
+    .map((m) => ({ ...m })),
   marketplaces: marketplaces.map((m) => ({ ...m })),
 });
 

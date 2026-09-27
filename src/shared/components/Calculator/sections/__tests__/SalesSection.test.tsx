@@ -136,9 +136,9 @@ describe('SalesSection', () => {
     expect(screen.getByRole('spinbutton', { name: 'calc.quantity' })).toBeInTheDocument()
   })
 
-  it('shows infillPercent when field is visible (advanced level)', () => {
+  it('never shows infillPercent, even in advanced level (Buma Labs fork)', () => {
     render(<SalesSection />)
-    expect(screen.getByText('calc.infillPercent')).toBeInTheDocument()
+    expect(screen.queryByText('calc.infillPercent')).not.toBeInTheDocument()
   })
 
   it('hides infillPercent when hidden in intermediate level', () => {

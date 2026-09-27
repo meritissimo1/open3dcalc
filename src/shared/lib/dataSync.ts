@@ -36,7 +36,13 @@ import {
 } from "@/shared/stores/colorPalette";
 import { useModelComparison } from "@/shared/stores/modelComparison";
 import { printers } from "@/shared/lib/printers";
+import type { MaterialStateFDM } from "@/shared/types";
 import { marketplaces } from "@/shared/lib/marketplace";
+import {
+  applyForkLocks,
+  LOCKED_CALC_LEVEL,
+  LOCKED_TAB,
+} from "@/shared/lib/forkLocks";
 
 export const SYNC_FORMAT = "open3dcalc-export" as const;
 export const SYNC_VERSION = "1.0" as const;
@@ -812,8 +818,8 @@ function synchronizeActiveStores(
     current.resetCalculator();
     cancelPendingAutoSave();
     useCalculatorStore.setState({
-      activeTab: "fdm",
-      calcLevel: "basic",
+      activeTab: LOCKED_TAB,
+      calcLevel: LOCKED_CALC_LEVEL,
       hiddenFields: [],
       currency: "auto",
       enabledSections: {
@@ -866,9 +872,12 @@ function synchronizeActiveStores(
     if (selected) merged.selectedMarketplace = selected;
   }
 
-  const validated = computeValidatedStoreResults(merged);
+  // Buma Labs fork: a backup from the upstream site may carry resin, a
+  // simplified level or purge, which this fork no longer exposes.
+  const locked = applyForkLocks(merged as { fdmMaterial: MaterialStateFDM });
+  const validated = computeValidatedStoreResults(locked);
   useCalculatorStore.setState({
-    ...merged,
+    ...locked,
     ...validated.input,
     results: validated.results,
     calculationIssues: validated.calculationIssues,

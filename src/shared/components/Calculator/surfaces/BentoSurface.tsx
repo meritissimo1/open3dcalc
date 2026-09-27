@@ -11,7 +11,6 @@ import {
 import { useCalculatorStore } from "@/shared/stores/calculatorStore";
 import { CalculationErrorState } from "@/shared/components/Results/CalculationErrorState";
 import { ResultsPanel } from "@/shared/components/Results/ResultsPanel";
-import { LevelToggle } from "../LevelToggle";
 import { BentoHeader } from "./bento/BentoHeader";
 import { BentoLaborCard } from "./bento/BentoLaborCard";
 import { BentoMachineCard } from "./bento/BentoMachineCard";
@@ -101,9 +100,6 @@ export function BentoSurface(): React.ReactElement {
           }
           hasResults={results !== null}
         />
-      </div>
-      <div className="flex shrink-0 sm:justify-end">
-        <LevelToggle />
       </div>
     </div>
   );

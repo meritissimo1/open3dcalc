@@ -131,11 +131,10 @@ describe("editable Bento cards", () => {
     await user.type(cost, "140");
     expect(useCalculatorStore.getState().fdmMaterial.costPerKg).toBe(140);
 
-    const purge = within(materialCard).getByRole("spinbutton", {
-      name: "Purga / Perda",
-    });
-    fireEvent.change(purge, { target: { value: "12" } });
-    expect(useCalculatorStore.getState().fdmMaterial.purgeWeight).toBe(12);
+    // Buma Labs fork: the purge/waste field was removed.
+    expect(
+      within(materialCard).queryByRole("spinbutton", { name: "Purga / Perda" }),
+    ).not.toBeInTheDocument();
 
     const density = within(materialCard).getByRole("spinbutton", {
       name: "Densidade",
@@ -252,18 +251,17 @@ describe("editable Bento cards", () => {
     const { materialCard, machineCard } = renderBento();
 
     expect(within(materialCard).getByRole("spinbutton", { name: "Densidade" })).toBeInTheDocument();
-    expect(within(materialCard).getByRole("spinbutton", { name: "Purga / Perda" })).toBeInTheDocument();
+    expect(within(materialCard).queryByRole("spinbutton", { name: "Purga / Perda" })).not.toBeInTheDocument();
     expect(within(machineCard).getByRole("combobox", { name: "Impressora" })).toBeInTheDocument();
     expect(within(machineCard).queryByRole("spinbutton", { name: "Custo da Impressora" })).not.toBeInTheDocument();
   });
 
-  it("honors hidden intermediate fields in advanced mode and keeps resin fields editable", async () => {
+  it("honors hidden intermediate fields in advanced mode and keeps resin fields editable", () => {
     useCalculatorStore.setState({
       calcLevel: "advanced",
       hiddenFields: ["material.density"],
       activeTab: "resin",
     });
-    const user = userEvent.setup();
     const { materialCard } = renderBento();
 
     expect(within(materialCard).queryByRole("spinbutton", { name: "Densidade" })).not.toBeInTheDocument();
@@ -274,12 +272,8 @@ describe("editable Bento cards", () => {
     const cost = within(materialCard).getByRole("spinbutton", { name: "Custo/Litro" });
     fireEvent.change(cost, { target: { value: "210" } });
     expect(useCalculatorStore.getState().resinMaterial.costPerLiter).toBe(210);
-
-    await user.selectOptions(
-      within(materialCard).getByRole("combobox", { name: "Tipo de Resina" }),
-      "Resina Tough",
-    );
-    expect(useCalculatorStore.getState().resinMaterial.type).toBe("Resina Tough");
+    // Buma Labs fork: the default catalog no longer seeds resin types, so
+    // there is no resin type to select here.
   });
 
   it("keeps the English labels and visible units in parity with Portuguese", () => {

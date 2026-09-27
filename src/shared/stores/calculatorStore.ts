@@ -15,6 +15,7 @@ import type { CalcLevel } from "./calculatorStore.types";
 import type { CurrencySetting } from "@/shared/lib/currency";
 import type { CalculationSnapshot } from "@/shared/types";
 import { guardedStorage } from "@/shared/lib/manifestStorage";
+import { applyForkLocks } from "@/shared/lib/forkLocks";
 import {
   DEFAULT_FDM_MATERIAL,
   DEFAULT_FDM_PARAMS,
@@ -134,7 +135,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     debouncedAutoSave(get);
   };
 
-  const initialValues = {
+  const loadedValues = {
     activeTab: "fdm" as const,
     fdmMaterial: loadStr("fdmMaterial", DEFAULT_FDM_MATERIAL),
     fdmPrintParams: loadStr("fdmPrintParams", DEFAULT_FDM_PARAMS),
@@ -209,6 +210,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
     lastHistoryKey: null,
     history: [],
   };
+  const initialValues = applyForkLocks(loadedValues);
 
   const initialValidation = computeValidatedStoreResults(initialValues);
 
@@ -669,7 +671,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
             ? snapshotSpool.id
             : null;
 
-        return {
+        return applyForkLocks({
           activeTab: snapshot.type,
           selectedPrinter,
           selectedMarketplace,
@@ -714,7 +716,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           infillPercent: snapshot.infillPercent,
           targetMarginMode: snapshot.targetMarginMode,
           enabledSections: snapshot.enabledSections ?? state.enabledSections,
-        };
+        });
       });
     },
 

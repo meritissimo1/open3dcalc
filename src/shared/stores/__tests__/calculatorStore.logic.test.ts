@@ -190,7 +190,7 @@ describe("CalculatorStore logic", () => {
   // ══════════════════════════════════════════════════════════════
 
   describe("loadHistoryItem — variations", () => {
-    it("loadHistoryItem with resin snapshot → restores resin config", () => {
+    it("loadHistoryItem with resin snapshot → restores resin config but stays on FDM (Buma Labs fork)", () => {
       const store = useCalculatorStore.getState();
 
       const snap = buildSnapshot({
@@ -219,7 +219,7 @@ describe("CalculatorStore logic", () => {
       store.loadHistoryItem(snap);
       const after = useCalculatorStore.getState();
 
-      expect(after.activeTab).toBe("resin");
+      expect(after.activeTab).toBe("fdm");
       expect(after.resinMaterial.type).toBe("Water Washable");
       expect(after.resinMaterial.volumeUsedMl).toBe(100);
       expect(after.resinPrintParams.printTimeHours).toBe(3);

@@ -9,8 +9,6 @@ import { useShallow } from "zustand/react/shallow";
 import { useKeyboardShortcuts } from "@/shared/hooks/useKeyboardShortcuts";
 import { QuickStartBanner } from "@/shared/components/ui/QuickStartBanner";
 import { ResultsPanel } from "@/shared/components/Results/ResultsPanel";
-import { TechToggle } from "./TechToggle";
-import { LevelToggle } from "./LevelToggle";
 import { ProductName } from "./ProductName";
 import { SectionNav } from "./SectionNav";
 import { SectionRenderer } from "./SectionRenderer";
@@ -115,10 +113,6 @@ export function Calculator() {
           className="col-start-2 row-start-1 flex-1 min-w-0 2xl:min-w-[560px] @container space-y-5"
         >
           <QuickStartBanner />
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-1">
-            <TechToggle />
-            <LevelToggle />
-          </div>
           <ProductName />
           <SectionRenderer
             t={t}

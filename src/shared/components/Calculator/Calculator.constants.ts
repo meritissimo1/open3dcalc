@@ -12,6 +12,7 @@ import {
 	Wrench,
 } from "lucide-react";
 import type { CalcLevel } from "@/shared/stores/calculatorStore";
+import { REMOVED_FIELDS } from "@/shared/lib/forkLocks";
 
 export interface SectionConfig {
 	id: string;
@@ -103,10 +104,10 @@ export const LEVEL_SECTIONS: Record<CalcLevel, string[]> = {
 };
 
 export const INTERMEDIATE_FIELDS: Record<string, string[]> = {
-	material: ['purgeWeight', 'spoolEfficiency', 'density', 'wasteMargin'],
+	material: ['spoolEfficiency', 'density', 'wasteMargin'],
 	print: ['selectedPrinter'],
 	failure: [],
-	sales: ['infillPercent', 'extrasCost', 'shippingCost', 'marketplace', 'taxPercent', 'markupPresets'],
+	sales: ['extrasCost', 'shippingCost', 'marketplace', 'taxPercent', 'markupPresets'],
 };
 
 export const BASIC_FIELDS: Record<string, string[]> = {
@@ -127,6 +128,7 @@ export function isFieldVisibleForLevel(
 	sectionId: string,
 	fieldId: string,
 ): boolean {
+	if (REMOVED_FIELDS.includes(`${sectionId}.${fieldId}`)) return false;
 	const sectionFields = INTERMEDIATE_FIELDS[sectionId] ?? [];
 	const basicFields = BASIC_FIELDS[sectionId] ?? [];
 
