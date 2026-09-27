@@ -117,15 +117,15 @@ describe("useWikiNamespace", () => {
     const { result } = renderHook(() => useWikiNamespace());
     await waitFor(() => expect(result.current.ready).toBe(true));
 
-    // i18n resolves es-ES to the pt-BR fallback, so the wiki stays with the
-    // language the rest of the UI actually displays.
+    // i18n resolves es-ES to the en-US fallback (Buma Labs fork default),
+    // so the wiki stays with the language the rest of the UI displays.
     await act(async () => {
       await i18n.changeLanguage("es-ES");
     });
 
     expect(loadWikiBundleMock).not.toHaveBeenCalledWith("es-ES");
     expect(result.current.ready).toBe(true);
-    expect(i18n.t("wiki:inventario.title")).toBe("Inventário");
+    expect(i18n.t("wiki:inventario.title")).toBe("Inventory");
   });
 
   it("removes its languageChanged listener on unmount (no leak)", async () => {
