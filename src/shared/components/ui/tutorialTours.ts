@@ -219,12 +219,6 @@ export const TOURS: Record<TourId, StepConfig[]> = {
       level: "advanced",
     },
     {
-      key: "adv-hardware",
-      target: '[data-tutorial="hardware"]',
-      tab: "calculator",
-      level: "advanced",
-    },
-    {
       key: "adv-machine",
       target: '[data-tutorial="machine"]',
       tab: "calculator",
@@ -239,12 +233,6 @@ export const TOURS: Record<TourId, StepConfig[]> = {
     {
       key: "adv-labor",
       target: '[data-tutorial="labor"]',
-      tab: "calculator",
-      level: "advanced",
-    },
-    {
-      key: "adv-ops",
-      target: '[data-tutorial="ops"]',
       tab: "calculator",
       level: "advanced",
     },

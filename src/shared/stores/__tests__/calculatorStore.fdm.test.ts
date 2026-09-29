@@ -85,9 +85,13 @@ describe('CalculatorStore FDM', () => {
     })
 
     it('hardware disabled → hardwareCost === 0', () => {
+      // Buma Labs fork: the hardware section was removed, so it starts off.
       const store = useCalculatorStore.getState()
-      expect(store.fdmHardware.enabled).toBe(true)
-      expect(store.results!.hardwareCost).toBeGreaterThan(0)
+      expect(store.fdmHardware.enabled).toBe(false)
+      expect(store.results!.hardwareCost).toBe(0)
+
+      store.setFdmHardware({ ...store.fdmHardware, enabled: true })
+      expect(useCalculatorStore.getState().results!.hardwareCost).toBeGreaterThan(0)
 
       store.setFdmHardware({ ...store.fdmHardware, enabled: false })
       const after = useCalculatorStore.getState()

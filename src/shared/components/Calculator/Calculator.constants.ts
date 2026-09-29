@@ -12,7 +12,7 @@ import {
 	Wrench,
 } from "lucide-react";
 import type { CalcLevel } from "@/shared/stores/calculatorStore";
-import { REMOVED_FIELDS } from "@/shared/lib/forkLocks";
+import { REMOVED_FIELDS, REMOVED_SECTIONS } from "@/shared/lib/forkLocks";
 
 export interface SectionConfig {
 	id: string;
@@ -102,6 +102,14 @@ export const LEVEL_SECTIONS: Record<CalcLevel, string[]> = {
 	intermediate: ['material', 'print', 'failure', 'sales', 'results'],
 	advanced: ['material', 'print', 'failure', 'hardware', 'machine', 'fixedCost', 'labor', 'ops', 'sales', 'results'],
 };
+
+/** Sections shown at `calcLevel`, minus the ones this fork removed. */
+export function isSectionShown(calcLevel: CalcLevel, sectionId: string): boolean {
+	return (
+		LEVEL_SECTIONS[calcLevel].includes(sectionId) &&
+		!REMOVED_SECTIONS.includes(sectionId)
+	);
+}
 
 export const INTERMEDIATE_FIELDS: Record<string, string[]> = {
 	material: ['spoolEfficiency', 'density', 'wasteMargin'],

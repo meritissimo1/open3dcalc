@@ -3,8 +3,8 @@ import { useCalculatorStore } from "@/shared/stores/calculatorStore";
 import { useShallow } from "zustand/react/shallow";
 import {
   SECTIONS,
-  LEVEL_SECTIONS,
   SECTION_ENABLES,
+  isSectionShown,
 } from "./Calculator.constants";
 
 interface SectionNavProps {
@@ -22,7 +22,7 @@ export function SectionNav({ activeSection, onSectionClick }: SectionNavProps) {
   );
 
   const visibleSections = SECTIONS.filter((s) =>
-    LEVEL_SECTIONS[calcLevel].includes(s.id),
+    isSectionShown(calcLevel, s.id),
   );
 
   return (
