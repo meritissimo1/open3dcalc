@@ -2,14 +2,12 @@ import { useId } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { useCurrency } from "@/shared/hooks/useCurrency";
 import { MaterialComparison } from "@/shared/components/Calculator/MaterialComparison";
 import { CostSummaryCard } from "./CostSummaryCard";
 
 export interface DiagnosticDetailsCardProps {
   readonly costPerGram: number;
   readonly failureCost: number;
-  readonly profitPerHour: number;
   /** Configured percentage failure rate, when the active mode is percentage-based. */
   readonly failureRatePercent?: number | null;
 }
@@ -21,11 +19,9 @@ const formatPercent = (value: number | null | undefined): string =>
 export function DiagnosticDetailsCard({
   costPerGram,
   failureCost,
-  profitPerHour,
   failureRatePercent,
 }: DiagnosticDetailsCardProps): React.ReactElement {
   const { t } = useTranslation();
-  const { format: formatCurrency } = useCurrency();
   const descriptionId = useId();
 
   return (
@@ -54,7 +50,8 @@ export function DiagnosticDetailsCard({
 
       <div className="min-w-0 space-y-4 border-t border-[var(--border-default)] p-3 sm:p-4">
         <CostSummaryCard costPerGram={costPerGram} failureCost={failureCost} />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {/* Buma Labs fork: profit per hour moved up to the Net profit tile. */}
+        <div className="grid grid-cols-1 gap-2">
           <div
             data-testid="diagnostic-failure-rate"
             className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-sunken)] p-3"
@@ -67,20 +64,6 @@ export function DiagnosticDetailsCard({
               className="mt-1 font-mono text-lg font-black text-[var(--cost-failure)]"
             >
               {formatPercent(failureRatePercent)}
-            </p>
-          </div>
-          <div
-            data-testid="diagnostic-profit-per-hour"
-            className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-sunken)] p-3"
-          >
-            <p className="text-xs font-semibold text-[var(--text-secondary)]">
-              {t("calc.profitPerHour")}
-            </p>
-            <p
-              aria-label={`${t("calc.profitPerHour")}: ${formatCurrency(profitPerHour)}/h`}
-              className="mt-1 font-mono text-lg font-black text-[var(--margin)]"
-            >
-              {formatCurrency(profitPerHour)}/h
             </p>
           </div>
         </div>

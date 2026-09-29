@@ -111,6 +111,16 @@ describe("ResultsPanel hierarchy", () => {
     ]);
   });
 
+  // Buma Labs fork: profit per hour sits under Net profit, not in Details.
+  it("shows the profit per hour next to the net profit, not in Details", () => {
+    render(<ResultsPanel variant="sidebar" />);
+
+    expect(screen.getByTestId("profit-summary")).toHaveTextContent("/h");
+    expect(screen.getByTestId("diagnostic-details")).not.toHaveTextContent(
+      "/h",
+    );
+  });
+
   it("keeps the calculation error as the first hierarchy child", () => {
     useCalculatorStore.setState({
       results: null,
