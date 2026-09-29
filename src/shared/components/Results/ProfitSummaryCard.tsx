@@ -9,7 +9,7 @@ export interface ProfitSummaryCardProps {
   profit: number;
   /** Net profit per billable hour (`profitPerHour` from the result). */
   readonly profitPerHour: number;
-  /** Kept for standalone consumers; the results hierarchy moves it to Details. */
+  /** Shown under the profit (Buma Labs fork moved it back from Details). */
   readonly showProfitPerHour?: boolean;
 }
 

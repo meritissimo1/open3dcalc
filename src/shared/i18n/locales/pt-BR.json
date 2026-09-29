@@ -849,7 +849,7 @@
     "productDuplicateWarn": "Já existe um produto com esse nome — cadastrado mesmo assim.",
     "viewProducts": "Ver no inventário",
     "details": "Detalhes",
-    "detailsDescription": "Custo por grama, falhas, lucro por hora e comparação de materiais",
+    "detailsDescription": "Custo por grama, falhas e comparação de materiais",
     "failureRate": "Taxa de falha",
     "saveAndRegister": "Salvar e cadastrar",
     "saveAndRegisterDescription": "Guarde o cálculo, registre o produto ou salve as configurações. A dedução de estoque é feita separadamente no grupo Estoque.",

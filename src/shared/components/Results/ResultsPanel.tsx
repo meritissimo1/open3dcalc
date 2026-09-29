@@ -109,7 +109,6 @@ export function ResultsPanel({
         totalCost={results.totalCost}
         profit={breakdown.displayProfit}
         profitPerHour={results.profitPerHour ?? 0}
-        showProfitPerHour={false}
       />
       <CostBreakdownCard
         chartData={breakdown.chartData}
@@ -119,7 +118,6 @@ export function ResultsPanel({
       <DiagnosticDetailsCard
         costPerGram={results.costPerGram}
         failureCost={results.failureCost}
-        profitPerHour={results.profitPerHour ?? 0}
         failureRatePercent={getFailureRatePercent(
           activeTab === "fdm" ? fdmPrintParams : resinPrintParams,
         )}
