@@ -141,6 +141,10 @@
       "errorPositive": "Use a number greater than zero."
     },
     "filamentProfile": "Filament",
+    "estimationSettings": {
+      "title": "3D file estimation settings",
+      "hint": "Only used when you load a 3D file to estimate weight and print time."
+    },
     "filament": {
       "purgePercent": "Purge",
       "filamentDiameterMm": "Filament Diameter",

@@ -535,9 +535,32 @@ describe("MaterialSection", () => {
     expect(wrapper.className).not.toContain("col-span-2");
   });
 
+  // Buma Labs fork: the estimator settings start collapsed.
+  it("keeps the 3D estimation settings collapsed until expanded", () => {
+    const store = createMockStore();
+    render(<MaterialSection {...defaultProps} store={store} isFDM={true} />);
+
+    const toggle = screen.getByRole("button", {
+      name: /calc\.estimationSettings\.title/,
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByLabelText("calc.slicer.layerHeightMm"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByLabelText("calc.slicer.layerHeightMm"),
+    ).toBeInTheDocument();
+  });
+
   it("renders the slicer profile fields in advanced mode (D-EA1)", () => {
     const store = createMockStore();
     render(<MaterialSection {...defaultProps} store={store} isFDM={true} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /calc\.estimationSettings\.title/ }),
+    );
 
     // O grupo só aparece quando isFieldVisible libera as chaves do slicer
     // (ausentes de BASIC/INTERMEDIATE_FIELDS → advanced apenas). D-EA5
@@ -586,6 +609,9 @@ describe("MaterialSection", () => {
         isFDM={true}
         handleInput={handleInput}
       />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /calc\.estimationSettings\.title/ }),
     );
 
     fireEvent.change(screen.getByLabelText("calc.slicer.wallCount"), {
