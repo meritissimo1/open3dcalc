@@ -16,8 +16,7 @@ import type { AMSSlot } from "@/shared/types";
 import { selectSpool } from "@/shared/stores/storeBridge";
 import type { FileParseResult } from "@/shared/components/StlPreview/StlPreview";
 import { StlPreview } from "@/shared/components/StlPreview/StlPreview";
-import { SlicerProfileFields } from "./SlicerProfileFields";
-import { FilamentAssumptionsFields } from "./FilamentAssumptionsFields";
+import { EstimationSettings } from "./EstimationSettings";
 import { formatWeight } from "@/shared/lib/format";
 
 export interface MaterialSectionProps {
@@ -485,22 +484,9 @@ export function MaterialSection({
             </div>
           )}
 
-          {/* D-EA1: perfil de fatiamento real do usuário. O gating por
-              calcLevel fica no `isFieldVisible` — as chaves do slicer não
-              constam de BASIC/INTERMEDIATE_FIELDS, então só aparecem no
-              modo avançado. Renderiza null nos outros modos. */}
-          <SlicerProfileFields
-            store={store}
-            t={t}
-            handleInput={handleInput}
-            isFieldVisible={isFieldVisible}
-          />
-
-          {/* D-EA5 (GA-2): parâmetros físicos do filamento — purge %, diâmetro
-              e override de MVS. Mesmo gating do D-EA1 (só modo avançado); a
-              store já sanitiza, não revalidamos aqui. Espelha
-              SlicerProfileFields. */}
-          <FilamentAssumptionsFields
+          {/* D-EA1/D-EA5: slicer profile + filament parameters, collapsed
+              (Buma Labs fork) — they only feed the 3D-file estimator. */}
+          <EstimationSettings
             store={store}
             t={t}
             handleInput={handleInput}
