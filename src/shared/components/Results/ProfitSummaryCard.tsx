@@ -60,7 +60,7 @@ export function ProfitSummaryCard({
             role="note"
             title={t("calc.profitPerHourTooltip")}
             aria-label={`${t("calc.profitPerHour")}: ${fmtCurrency(profitPerHour)}/h. ${t("calc.profitPerHourTooltip")}`}
-            className={`mt-1 inline-block text-[11px] sm:text-xs font-mono font-semibold ${profitTextClass}/80 underline decoration-dotted underline-offset-2 cursor-help focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none rounded`}
+            className={`mt-1 inline-block text-xs sm:text-sm font-mono font-semibold ${profitTextClass}/80 underline decoration-dotted underline-offset-2 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none rounded`}
           >
             {fmtCurrency(profitPerHour)}/h
           </span>
