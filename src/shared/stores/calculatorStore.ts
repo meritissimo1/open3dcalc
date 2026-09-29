@@ -549,8 +549,9 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
           maintenanceEnabled: false,
           maintenanceCost: 0,
         },
+        // Buma Labs fork: the hardware section was removed; keep it off.
         fdmHardware: {
-          enabled: true,
+          enabled: false,
           nozzleEnabled: true,
           nozzleCost,
           nozzleLifespanKg: nozzleLife,
@@ -593,7 +594,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
         fdmSlicerProfile: { ...DEFAULT_FDM_SLICER_PROFILE },
         fdmFilament: { ...DEFAULT_FDM_FILAMENT },
         fdmMachine: { ...DEFAULT_FDM_MACHINE },
-        fdmHardware: { ...DEFAULT_FDM_HARDWARE },
+        fdmHardware: { ...DEFAULT_FDM_HARDWARE, enabled: false },
         fdmFinishing: { ...DEFAULT_FDM_FINISHING },
         fdmLabor: {
           ...lockLabor(DEFAULT_LABOR),

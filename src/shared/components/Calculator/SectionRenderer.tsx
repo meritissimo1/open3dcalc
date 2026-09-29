@@ -15,7 +15,7 @@ import { SalesSection } from "./sections/SalesSection";
 import { ResultsPanel } from "@/shared/components/Results/ResultsPanel";
 import { SectionHeader } from "./sections/SectionHeader";
 import { FieldCustomizer } from "./FieldCustomizer";
-import { SECTIONS, LEVEL_SECTIONS, isFieldVisibleForLevel } from "./Calculator.constants";
+import { SECTIONS, isFieldVisibleForLevel, isSectionShown } from "./Calculator.constants";
 
 interface SectionRendererProps {
 	t: (key: string) => string;
@@ -66,7 +66,7 @@ export function SectionRenderer(props: SectionRendererProps) {
 	);
 
 	const visibleSections = SECTIONS.filter((s) =>
-		LEVEL_SECTIONS[calcLevel].includes(s.id),
+		isSectionShown(calcLevel, s.id),
 	);
 	const orderedSections = [...visibleSections].sort((a, b) => {
 		if (a.id === "results") return -1;

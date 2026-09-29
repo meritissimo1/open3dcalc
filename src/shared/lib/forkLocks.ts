@@ -1,4 +1,11 @@
-import type { LaborCosts, MaterialStateFDM } from "@/shared/types";
+import type {
+  FDMFinishing,
+  FDMHardware,
+  LaborCosts,
+  MaterialStateFDM,
+  OperationalCosts,
+  SoftwareCosts,
+} from "@/shared/types";
 
 /**
  * Buma Labs fork locks.
@@ -18,6 +25,13 @@ export const REMOVED_FIELDS: readonly string[] = [
   "sales.infillPercent",
 ];
 
+/**
+ * Calculator sections removed at the team's request (hardware wear,
+ * operational & software). Their costs are locked off in `applyForkLocks`
+ * so nothing hidden is charged.
+ */
+export const REMOVED_SECTIONS: readonly string[] = ["hardware", "ops"];
+
 /** Filament types seeded into a fresh catalog. */
 export const DEFAULT_FDM_MATERIAL_IDS: readonly string[] = [
   "pla",
@@ -31,7 +45,14 @@ export const DEFAULT_FDM_MATERIAL_IDS: readonly string[] = [
  * imports (e.g. a backup exported from the upstream site).
  */
 export function applyForkLocks<
-  T extends { fdmMaterial: MaterialStateFDM; fdmLabor: LaborCosts },
+  T extends {
+    fdmMaterial: MaterialStateFDM;
+    fdmLabor: LaborCosts;
+    fdmHardware?: FDMHardware;
+    fdmFinishing?: FDMFinishing;
+    fdmOps?: OperationalCosts;
+    fdmSoft?: SoftwareCosts;
+  },
 >(
   s: T,
 ): T & { activeTab: typeof LOCKED_TAB; calcLevel: typeof LOCKED_CALC_LEVEL } {
@@ -41,6 +62,15 @@ export function applyForkLocks<
     calcLevel: LOCKED_CALC_LEVEL,
     fdmMaterial: { ...s.fdmMaterial, purgeWeight: 0 },
     fdmLabor: lockLabor(s.fdmLabor),
+    // Removed sections (REMOVED_SECTIONS): never charge their costs.
+    ...(s.fdmHardware
+      ? { fdmHardware: { ...s.fdmHardware, enabled: false } }
+      : {}),
+    ...(s.fdmFinishing
+      ? { fdmFinishing: { ...s.fdmFinishing, enabled: false } }
+      : {}),
+    ...(s.fdmOps ? { fdmOps: { ...s.fdmOps, enabled: false } } : {}),
+    ...(s.fdmSoft ? { fdmSoft: { ...s.fdmSoft, enabled: false } } : {}),
   };
 }
 
