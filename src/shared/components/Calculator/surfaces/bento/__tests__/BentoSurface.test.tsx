@@ -217,7 +217,7 @@ describe("BentoSurface", () => {
 
      await user.click(
        screen.getByRole("button", {
-         name: "Adicionar ao histórico sem deduzir estoque",
+         name: "Salvar cálculo",
        }),
      );
 

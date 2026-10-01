@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ProductActionsCard } from "../ProductActionsCard";
@@ -190,6 +190,45 @@ describe("ProductActionsCard", () => {
     );
 
     expect(addToHistory).toHaveBeenCalledTimes(1);
+  });
+
+  // Buma Labs fork: the save button confirms in place.
+  it("confirms a save, then goes back to the normal label", () => {
+    vi.useFakeTimers();
+    try {
+      let n = 0;
+      useCalculatorStore.setState({
+        lastHistoryKey: null,
+        addToHistory: () =>
+          useCalculatorStore.setState({ lastHistoryKey: `key-${++n}` }),
+      });
+      render(<ProductActionsCard displaySellPrice={105.88} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "calc.addHistory" }));
+      const button = screen.getByRole("button", { name: "results.saved" });
+      expect(button).toHaveAttribute("data-state", "saved");
+
+      act(() => vi.advanceTimersByTime(2000));
+      expect(
+        screen.getByRole("button", { name: "calc.addHistory" }),
+      ).toHaveAttribute("data-state", "idle");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("says when the calculation was already saved", () => {
+    useCalculatorStore.setState({
+      lastHistoryKey: "same",
+      // An identical calculation: the store skips it and keeps the key.
+      addToHistory: () => undefined,
+    });
+    render(<ProductActionsCard displaySellPrice={105.88} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "calc.addHistory" }));
+    expect(
+      screen.getByRole("button", { name: "results.alreadySaved" }),
+    ).toHaveAttribute("data-state", "already");
   });
 
   it("translates an insufficient-stock error from history save", async () => {
