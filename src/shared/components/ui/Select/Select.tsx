@@ -1,4 +1,11 @@
-import { useState, useEffect, useId, useMemo, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useId,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import type { CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -197,6 +204,19 @@ export function Select({
     }
   }, [focusIdx, open, contentRef]);
 
+  // Buma Labs fork: `autoFocus` focused the search box before floating-ui
+  // positioned the list — while it still sat at the page top (top: y ?? 0) —
+  // so the browser scrolled the page up. Focus after the first positioned
+  // frame and never scroll for it.
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!open || !search) return;
+    const frame = requestAnimationFrame(() =>
+      searchRef.current?.focus({ preventScroll: true }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [open, search]);
+
   const floatingStyle: CSSProperties = isMobile
     ? {
         position: "fixed",
@@ -295,7 +315,7 @@ export function Select({
                     }}
                     placeholder="Buscar..."
                     className="flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
-                    autoFocus
+                    ref={searchRef}
                   />
                 </div>
               )}
