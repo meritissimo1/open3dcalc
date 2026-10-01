@@ -70,6 +70,32 @@ describe("Select", () => {
     expect(screen.getByRole("listbox")).toBeInTheDocument();
   });
 
+  // Buma Labs fork: focusing the search box used to scroll the page to the
+  // top, because the list was still unpositioned (top: 0) when it mounted.
+  it("focuses the search box without scrolling the page", async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+    render(
+      <Select
+        value="a"
+        onChange={vi.fn()}
+        options={mockOptions}
+        label="Test"
+      />,
+    );
+    fireEvent.click(screen.getByRole("combobox"));
+
+    const searchBox = screen.getByPlaceholderText("Buscar...");
+    await vi.waitFor(() => expect(searchBox).toHaveFocus());
+    const searchFocusCalls = focus.mock.contexts
+      .map((el, i) => [el, focus.mock.calls[i][0]] as const)
+      .filter(([el]) => el === searchBox);
+    expect(searchFocusCalls.length).toBeGreaterThan(0);
+    for (const [, options] of searchFocusCalls) {
+      expect(options).toEqual({ preventScroll: true });
+    }
+    focus.mockRestore();
+  });
+
   it("has zero-duration transition when reduced motion is preferred", () => {
     // This test verifies the component respects reduced motion
     // The actual behavior is controlled by the useReducedMotion hook
