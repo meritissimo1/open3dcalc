@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { Product, ProductStatus } from "@/shared/types";
 import { downloadBlob } from "@/shared/lib/download";
+import { formatWeight } from "@/shared/lib/format";
 import {
   PRODUCT_STATUSES,
   productStatus,
@@ -35,6 +36,7 @@ interface ProductFormState {
   link: string;
   status: ProductStatus;
   printTimeHours: string;
+  weightGrams: string;
   costPrice: string;
   inPersonPrice: string;
   salePrice: string;
@@ -45,6 +47,7 @@ interface ProductFormValues {
   link: string;
   status: ProductStatus;
   printTimeHours: number;
+  weightGrams: number;
   costPrice: number;
   inPersonPrice: number;
   salePrice: number;
@@ -55,6 +58,7 @@ const EMPTY_FORM: ProductFormState = {
   link: "",
   status: "testing",
   printTimeHours: "",
+  weightGrams: "",
   costPrice: "",
   inPersonPrice: "",
   salePrice: "",
@@ -94,6 +98,7 @@ function ProductFormModal({
           link: product.link ?? "",
           status: productStatus(product),
           printTimeHours: String(product.printTimeHours ?? ""),
+          weightGrams: product.weightGrams ? String(product.weightGrams) : "",
           costPrice: String(product.costPrice),
           inPersonPrice: product.inPersonPrice
             ? String(product.inPersonPrice)
@@ -124,6 +129,7 @@ function ProductFormModal({
       link: form.link.trim(),
       status: form.status,
       printTimeHours: toNumber(form.printTimeHours),
+      weightGrams: toNumber(form.weightGrams),
       costPrice: cost,
       inPersonPrice: toNumber(form.inPersonPrice),
       salePrice: toNumber(form.salePrice),
@@ -138,7 +144,12 @@ function ProductFormModal({
   const numberField = (
     id: string,
     label: string,
-    key: "printTimeHours" | "costPrice" | "inPersonPrice" | "salePrice",
+    key:
+      | "printTimeHours"
+      | "weightGrams"
+      | "costPrice"
+      | "inPersonPrice"
+      | "salePrice",
   ) => (
     <div>
       <label htmlFor={id} className={labelCls}>
@@ -199,7 +210,7 @@ function ProductFormModal({
               className={inputCls}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label htmlFor="product-status" className={labelCls}>
                 {t("products.status")}
@@ -224,6 +235,7 @@ function ProductFormModal({
               t("products.printTime"),
               "printTimeHours",
             )}
+            {numberField("product-weight", t("products.weight"), "weightGrams")}
           </div>
           <div className="grid grid-cols-3 gap-3">
             {numberField("product-cost", t("products.cost"), "costPrice")}
@@ -361,7 +373,7 @@ export function ProductInventory() {
 
   const handleSave = (data: ProductFormValues) => {
     if (editing) updateProduct(editing.id, data);
-    else addProduct({ ...data, weightGrams: 0, filamentType: "" });
+    else addProduct({ ...data, filamentType: "" });
     setEditing(null);
     setFormOpen(false);
   };
@@ -461,6 +473,7 @@ export function ProductInventory() {
                   sort={sort}
                   onSort={handleSort}
                 />
+                <th className="py-2 pr-3">{t("products.weight")}</th>
                 <SortHeader
                   label={t("products.cost")}
                   sortKey="cost"
@@ -549,6 +562,10 @@ export function ProductInventory() {
                     </td>
                     <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
                       {p.printTimeHours ? `${p.printTimeHours} h` : "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
+                      {/* Same 1-decimal display as the calculator's Part Weight. */}
+                      {p.weightGrams ? formatWeight(p.weightGrams) : "—"}
                     </td>
                     <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
                       {format(p.costPrice)}

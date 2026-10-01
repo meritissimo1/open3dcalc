@@ -47,6 +47,7 @@ export function ProductActionsCard({
     addToHistory,
     activeTab,
     fdmType,
+    partWeight,
     resinType,
     selectedSpoolId,
   } = useCalculatorStore(
@@ -58,6 +59,7 @@ export function ProductActionsCard({
       addToHistory: s.addToHistory,
       activeTab: s.activeTab,
       fdmType: s.fdmMaterial.type,
+      partWeight: s.fdmMaterial.weightUsed,
       resinType: s.resinMaterial.type,
       selectedSpoolId: s.selectedSpoolId,
     })),
@@ -126,7 +128,8 @@ export function ProductActionsCard({
     const filamentType = activeSpool ? activeSpool.material : currentMaterial;
     const data = calculatorToProduct({
       productName: name,
-      unitWeight: results.unitWeight,
+      // Buma Labs fork: the part weight typed in the calculator.
+      unitWeight: partWeight,
       filamentType,
       totalCost: results.totalCost,
       displaySellPrice,

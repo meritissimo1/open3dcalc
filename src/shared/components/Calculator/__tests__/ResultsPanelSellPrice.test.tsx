@@ -228,7 +228,12 @@ describe("ResultsPanel — calculator → product bridge", () => {
     expect(products[0].name).toBe("Vaso Teste");
     expect(products[0].costPrice).toBe(60);
     expect(products[0].salePrice).toBe(0);
-    expect(products[0].weightGrams).toBe(85);
+    // Buma Labs fork: the part weight typed in the calculator, not the
+    // spool-efficiency-adjusted unit weight (85 in this fixture).
+    expect(products[0].weightGrams).toBe(
+      useCalculatorStore.getState().fdmMaterial.weightUsed,
+    );
+    expect(products[0].weightGrams).not.toBe(85);
     expect(screen.getByRole("status")).toHaveTextContent(
       "results.productRegistered",
     );

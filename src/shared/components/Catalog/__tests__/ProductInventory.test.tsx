@@ -177,6 +177,27 @@ describe("ProductInventory UI behavior", () => {
     ]);
   });
 
+  it("shows the weight next to the print time", () => {
+    useProductInventory.getState().addProduct({
+      name: "Chaveiro",
+      weightGrams: 7.71,
+      filamentType: "PLA",
+      costPrice: 3,
+      salePrice: 0,
+      printTimeHours: 0.5,
+    });
+    render(<ProductInventory />);
+
+    const headers = screen
+      .getAllByRole("columnheader")
+      .map((h) => h.textContent ?? "");
+    const timeIdx = headers.findIndex((h) => h.includes("products.printTime"));
+    expect(headers[timeIdx + 1]).toBe("products.weight");
+    const cells = screen.getAllByRole("cell").map((c) => c.textContent);
+    // Same 1-decimal display as the calculator's Part Weight field.
+    expect(cells).toContain("7.7");
+  });
+
   it("links the product name when a link is set", () => {
     useProductInventory.getState().addProduct({
       name: "Chaveiro",
