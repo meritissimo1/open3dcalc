@@ -699,7 +699,9 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => {
       if (s.productName.trim().length >= 2) {
         useProductInventory.getState().upsertFromCalculator({
           name: s.productName.trim(),
-          weightGrams: roundCurrency(Math.max(0, r.unitWeight)),
+          // The part weight typed in the calculator (not the
+          // spool-efficiency-adjusted weight).
+          weightGrams: roundCurrency(Math.max(0, s.fdmMaterial.weightUsed)),
           filamentType: s.fdmMaterial.type,
           costPrice: roundCurrency(Math.max(0, r.totalCost)),
           printTimeHours: s.fdmPrintParams.printTimeHours,

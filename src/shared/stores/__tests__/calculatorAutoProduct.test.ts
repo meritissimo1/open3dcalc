@@ -26,6 +26,9 @@ describe("saving a calculation (Buma Labs fork)", () => {
       printTimeHours: state.fdmPrintParams.printTimeHours,
     });
     expect(product.costPrice).toBeCloseTo(state.results!.totalCost, 2);
+    // The part weight typed in the calculator, not the efficiency-adjusted one.
+    expect(product.weightGrams).toBe(state.fdmMaterial.weightUsed);
+    expect(product.weightGrams).not.toBe(state.results!.unitWeight);
   });
 
   it("updates the same product on the next save instead of duplicating", () => {
