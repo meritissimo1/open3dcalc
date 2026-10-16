@@ -5,6 +5,7 @@ import {
   Package,
   Database,
   CheckCircle2,
+  ChevronDown,
   X,
 } from "lucide-react";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
@@ -59,6 +60,11 @@ export function MaterialSection({
   const [weightDraft, setWeightDraft] = useState<string | null>(null);
   const multiMaterialLabelId = useId();
   const multiMaterialDescriptionId = useId();
+  // Buma Labs fork: spool efficiency, density and the 3D-file tools sit
+  // behind a collapsed toggle. They stay mounted (just hidden) so a loaded
+  // 3D file survives collapsing.
+  const [moreOpen, setMoreOpen] = useState(false);
+  const morePanelId = useId();
   const weightValue = weightDraft ?? formatWeight(store.fdmMaterial.weightUsed);
 
   const handleStlParsed = useCallback(
@@ -427,71 +433,100 @@ export function MaterialSection({
                   tooltip={t("tooltip.purge")}
                 />
               )}
-              {isFieldVisible("material", "spoolEfficiency") && (
-                <InputGroup
-                  label={t("calc.spoolEfficiency")}
-                  value={store.fdmMaterial.spoolEfficiency}
-                  onChange={(v) =>
-                    handleInput(v, (val) =>
-                      store.setFdmMaterial({
-                        ...store.fdmMaterial,
-                        spoolEfficiency: val,
-                      }),
-                    )
-                  }
-                  type="number"
-                  unit="%"
-                  tooltip={t("tooltip.spoolEfficiency")}
+              <button
+                type="button"
+                onClick={() => setMoreOpen((v) => !v)}
+                aria-expanded={moreOpen}
+                aria-controls={morePanelId}
+                className="@form:col-span-2 w-full min-h-[44px] flex items-center justify-between gap-3 rounded-xl border border-[var(--border-default)] px-4 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              >
+                <span className="flex flex-col">
+                  <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                    {t("calc.materialMore.title")}
+                  </span>
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    {t("calc.spoolEfficiency")}{" "}
+                    {store.fdmMaterial.spoolEfficiency}% · {t("calc.density")}{" "}
+                    {store.fdmMaterial.density} g/cm³
+                  </span>
+                </span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`w-4 h-4 shrink-0 text-[var(--text-muted)] transition-transform ${moreOpen ? "rotate-180" : ""}`}
                 />
-              )}
-              {isFieldVisible("material", "density") && (
-                <InputGroup
-                  label={t("calc.density")}
-                  value={store.fdmMaterial.density}
-                  onChange={(v) =>
-                    handleInput(v, (val) =>
-                      store.setFdmMaterial({
-                        ...store.fdmMaterial,
-                        density: val,
-                      }),
-                    )
-                  }
-                  type="number"
-                  unit="g/cm³"
-                  tooltip={t("tooltip.density")}
-                />
-              )}
-              <div className="w-full min-w-0 @form:col-span-2">
-                <StlPreview
-                  onFileParsed={handleStlParsed}
-                  onClear={handleStlClear}
-                  materialDensity={store.fdmMaterial.density}
-                  infillPercent={store.infillPercent}
-                  // D-EA1: o estimador passa a usar o perfil de fatiamento
-                  // real do usuário em vez de VOLUME_DEFAULTS (GA-1).
-                  layerHeight={store.fdmSlicerProfile.layerHeightMm}
-                  speed={store.fdmSlicerProfile.printSpeedMmPerS}
-                  wallCount={store.fdmSlicerProfile.wallCount}
-                  lineWidthMm={store.fdmSlicerProfile.lineWidthMm}
-                  topLayers={store.fdmSlicerProfile.topLayers}
-                  bottomLayers={store.fdmSlicerProfile.bottomLayers}
-                  // D-EA4: o lookup em filamentProfiles é case-insensitive
-                  // ("PLA"/"PlA" matcheiam "pla"); a normalização abaixo é
-                  // inofensiva e mantém o nome canônico na store (type "PLA").
-                  material={store.fdmMaterial.type.toLowerCase()}
-                />
+              </button>
+              <div
+                id={morePanelId}
+                hidden={!moreOpen}
+                className="@form:col-span-2 grid grid-cols-1 @form:grid-cols-2 gap-3"
+              >
+                {isFieldVisible("material", "spoolEfficiency") && (
+                  <InputGroup
+                    label={t("calc.spoolEfficiency")}
+                    value={store.fdmMaterial.spoolEfficiency}
+                    onChange={(v) =>
+                      handleInput(v, (val) =>
+                        store.setFdmMaterial({
+                          ...store.fdmMaterial,
+                          spoolEfficiency: val,
+                        }),
+                      )
+                    }
+                    type="number"
+                    unit="%"
+                    tooltip={t("tooltip.spoolEfficiency")}
+                  />
+                )}
+                {isFieldVisible("material", "density") && (
+                  <InputGroup
+                    label={t("calc.density")}
+                    value={store.fdmMaterial.density}
+                    onChange={(v) =>
+                      handleInput(v, (val) =>
+                        store.setFdmMaterial({
+                          ...store.fdmMaterial,
+                          density: val,
+                        }),
+                      )
+                    }
+                    type="number"
+                    unit="g/cm³"
+                    tooltip={t("tooltip.density")}
+                  />
+                )}
+                <div className="w-full min-w-0 @form:col-span-2">
+                  <StlPreview
+                    onFileParsed={handleStlParsed}
+                    onClear={handleStlClear}
+                    materialDensity={store.fdmMaterial.density}
+                    infillPercent={store.infillPercent}
+                    // D-EA1: o estimador passa a usar o perfil de fatiamento
+                    // real do usuário em vez de VOLUME_DEFAULTS (GA-1).
+                    layerHeight={store.fdmSlicerProfile.layerHeightMm}
+                    speed={store.fdmSlicerProfile.printSpeedMmPerS}
+                    wallCount={store.fdmSlicerProfile.wallCount}
+                    lineWidthMm={store.fdmSlicerProfile.lineWidthMm}
+                    topLayers={store.fdmSlicerProfile.topLayers}
+                    bottomLayers={store.fdmSlicerProfile.bottomLayers}
+                    // D-EA4: o lookup em filamentProfiles é case-insensitive
+                    // ("PLA"/"PlA" matcheiam "pla"); a normalização abaixo é
+                    // inofensiva e mantém o nome canônico na store (type "PLA").
+                    material={store.fdmMaterial.type.toLowerCase()}
+                  />
+                </div>
+                {/* D-EA1/D-EA5: slicer profile + filament parameters, collapsed
+                  (Buma Labs fork) — they only feed the 3D-file estimator. */}
+                <div className="@form:col-span-2">
+                  <EstimationSettings
+                    store={store}
+                    t={t}
+                    handleInput={handleInput}
+                    isFieldVisible={isFieldVisible}
+                  />
+                </div>
               </div>
             </div>
           )}
-
-          {/* D-EA1/D-EA5: slicer profile + filament parameters, collapsed
-              (Buma Labs fork) — they only feed the 3D-file estimator. */}
-          <EstimationSettings
-            store={store}
-            t={t}
-            handleInput={handleInput}
-            isFieldVisible={isFieldVisible}
-          />
 
           {/* Auto-deduction Spool Selector — FDM non-AMS only */}
           {isFDM &&

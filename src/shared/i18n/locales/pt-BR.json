@@ -141,6 +141,9 @@
       "errorPositive": "Use um número maior que zero."
     },
     "filamentProfile": "Filamento",
+    "materialMore": {
+      "title": "Carretel, densidade e arquivo 3D"
+    },
     "estimationSettings": {
       "title": "Ajustes da estimativa por arquivo 3D",
       "hint": "Só são usados ao carregar um arquivo 3D para estimar peso e tempo de impressão."
