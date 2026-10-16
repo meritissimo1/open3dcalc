@@ -1,5 +1,5 @@
 import { Info, AlertCircle } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 
 interface InputGroupProps {
@@ -34,6 +34,18 @@ export function InputGroup({
   onFocus,
 }: InputGroupProps) {
   const id = useId();
+  // Buma Labs fork: while a number field has focus, show exactly what's typed.
+  // Callers turn "" into 0, so without this a cleared field snapped back to
+  // "0" and typing "120" produced "0120".
+  // The draft only wins while it still matches the value ("" ↔ 0, "1." ↔ 1);
+  // an outside change (undo, history, example) shows the new value.
+  const [draft, setDraft] = useState<string | null>(null);
+  const isNumber = type === "number";
+  const showDraft =
+    isNumber &&
+    draft !== null &&
+    (draft === String(value) ||
+      Number(draft === "" ? 0 : draft) === Number(value));
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
@@ -59,10 +71,19 @@ export function InputGroup({
         <input
           id={id}
           type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
-          onFocus={onFocus}
+          value={showDraft ? draft : value}
+          onChange={(e) => {
+            if (isNumber) setDraft(e.target.value);
+            onChange(e.target.value);
+          }}
+          onBlur={() => {
+            setDraft(null);
+            onBlur?.();
+          }}
+          onFocus={() => {
+            if (isNumber) setDraft(String(value));
+            onFocus?.();
+          }}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
           placeholder={placeholder}

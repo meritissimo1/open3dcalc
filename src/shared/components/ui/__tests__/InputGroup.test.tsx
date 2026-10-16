@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { InputGroup } from '../InputGroup'
 
@@ -57,5 +58,53 @@ describe('InputGroup', () => {
     )
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.className).toContain('custom-class')
+  })
+
+  // Buma Labs fork: a cleared number field stays empty while focused.
+  describe('number field draft', () => {
+    // Mirrors the calculator: "" is stored as 0.
+    function Controlled({ initial = 125 }: { initial?: number }) {
+      const [value, setValue] = useState(initial)
+      return (
+        <>
+          <InputGroup
+            label="Cost"
+            type="number"
+            value={value}
+            onChange={(v) => setValue(v === '' ? 0 : parseFloat(v) || 0)}
+          />
+          <button onClick={() => setValue(999)}>external</button>
+        </>
+      )
+    }
+
+    it('lets the user clear the field and type from scratch', () => {
+      render(<Controlled />)
+      const input = screen.getByRole('spinbutton')
+      fireEvent.focus(input)
+      fireEvent.change(input, { target: { value: '' } })
+      expect(input).toHaveValue(null)
+      fireEvent.change(input, { target: { value: '120' } })
+      expect(input).toHaveValue(120)
+      expect((input as HTMLInputElement).value).toBe('120')
+    })
+
+    it('shows the stored value again on blur', () => {
+      render(<Controlled />)
+      const input = screen.getByRole('spinbutton')
+      fireEvent.focus(input)
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.blur(input)
+      expect((input as HTMLInputElement).value).toBe('0')
+    })
+
+    it('drops the draft when the value changes from outside', () => {
+      render(<Controlled />)
+      const input = screen.getByRole('spinbutton')
+      fireEvent.focus(input)
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.click(screen.getByText('external'))
+      expect((input as HTMLInputElement).value).toBe('999')
+    })
   })
 })
