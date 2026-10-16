@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer } from "@/shared/components/ui/Toast";
 import { useCurrency } from "@/shared/hooks/useCurrency";
@@ -45,6 +45,47 @@ export function Calculator() {
   const [showSpoolSelector, setShowSpoolSelector] = useState(false);
 
   const [activeSection, setActiveSection] = useState("material");
+
+  // Buma Labs fork: the sections menu follows the scroll. A click on the
+  // menu wins while its smooth scroll runs — the last sections can't reach
+  // the top of the page and would otherwise be replaced by the one above.
+  const clickLockUntil = useRef(0);
+  const handleSectionClick = useCallback((id: string) => {
+    clickLockUntil.current = Date.now() + 1000;
+    setActiveSection(id);
+  }, []);
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (Date.now() < clickLockUntil.current) return;
+      const sections = Array.from(
+        document.querySelectorAll<HTMLElement>('[id^="section-"]'),
+      ).filter((el) => el.offsetParent !== null);
+      if (sections.length === 0) return;
+      // Below the sticky header (92px) plus a little room.
+      const line = 140;
+      let current = sections[0];
+      for (const el of sections) {
+        if (el.getBoundingClientRect().top <= line) current = el;
+      }
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4;
+      if (atBottom) current = sections[sections.length - 1];
+      setActiveSection(current.id.replace("section-", ""));
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
   const [toastItems, setToastItems] = useState<
     { id: number; message: string; type: "error" | "success" | "info" }[]
   >([]);
@@ -95,7 +136,7 @@ export function Calculator() {
         <div data-testid="calculator-section-nav" className="col-start-1 row-start-1 min-w-0">
           <SectionNav
             activeSection={activeSection}
-            onSectionClick={setActiveSection}
+            onSectionClick={handleSectionClick}
           />
         </div>
         <div
