@@ -535,11 +535,41 @@ describe("MaterialSection", () => {
     expect(wrapper.className).not.toContain("col-span-2");
   });
 
+  // Buma Labs fork: spool efficiency, density and the 3D-file tools sit
+  // behind a collapsed toggle that still shows their values.
+  it("collapses spool efficiency, density and the 3D file under a toggle", () => {
+    const store = createMockStore();
+    render(<MaterialSection {...defaultProps} store={store} isFDM={true} />);
+
+    const toggle = screen.getByRole("button", {
+      name: /calc\.materialMore\.title/,
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveTextContent(
+      `${store.fdmMaterial.spoolEfficiency}%`,
+    );
+    const panel = document.getElementById(
+      toggle.getAttribute("aria-controls")!,
+    )!;
+    expect(panel).not.toBeVisible();
+    expect(panel).toContainElement(
+      screen.getByLabelText("calc.spoolEfficiency"),
+    );
+    expect(panel).toContainElement(screen.getByTestId("mock-stl-preview"));
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(panel).toBeVisible();
+  });
+
   // Buma Labs fork: the estimator settings start collapsed.
   it("keeps the 3D estimation settings collapsed until expanded", () => {
     const store = createMockStore();
     render(<MaterialSection {...defaultProps} store={store} isFDM={true} />);
 
+    fireEvent.click(
+      screen.getByRole("button", { name: /calc\.materialMore\.title/ }),
+    );
     const toggle = screen.getByRole("button", {
       name: /calc\.estimationSettings\.title/,
     });
@@ -558,6 +588,9 @@ describe("MaterialSection", () => {
   it("renders the slicer profile fields in advanced mode (D-EA1)", () => {
     const store = createMockStore();
     render(<MaterialSection {...defaultProps} store={store} isFDM={true} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /calc\.materialMore\.title/ }),
+    );
     fireEvent.click(
       screen.getByRole("button", { name: /calc\.estimationSettings\.title/ }),
     );
@@ -609,6 +642,9 @@ describe("MaterialSection", () => {
         isFDM={true}
         handleInput={handleInput}
       />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /calc\.materialMore\.title/ }),
     );
     fireEvent.click(
       screen.getByRole("button", { name: /calc\.estimationSettings\.title/ }),
