@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PrintSection } from "../PrintSection";
 import type { CalculatorState } from "@/shared/stores/calculatorStore";
@@ -77,11 +77,29 @@ describe("PrintSection", () => {
     );
   });
 
-  it("shows three input fields (print time, power, energy cost)", () => {
+  // Buma Labs fork: on FDM the print time is a text field that reads
+  // MakerWorld-style input ("5.3", "30 min").
+  it("shows the print time field plus power and energy cost", () => {
     const store = createMockStore();
     render(<PrintSection {...defaultProps} store={store} />);
-    const inputs = screen.getAllByRole("spinbutton");
-    expect(inputs.length).toBe(3);
+    expect(
+      screen.getByRole("textbox", { name: "calc.printTime" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton")).toHaveLength(2);
+  });
+
+  it("reads minutes typed in the print time field", () => {
+    const store = createMockStore();
+    render(<PrintSection {...defaultProps} store={store} />);
+    const field = screen.getByRole("textbox", { name: "calc.printTime" });
+    fireEvent.focus(field);
+    fireEvent.change(field, { target: { value: "30 min" } });
+    expect(store.setFdmPrintParams).toHaveBeenLastCalledWith(
+      expect.objectContaining({ printTimeHours: 0.5 }),
+    );
+    expect(screen.getByTestId("print-time-reading")).toHaveTextContent(
+      "= 30min",
+    );
   });
 
   it("displays FDM print values when isFDM is true", () => {
@@ -98,10 +116,15 @@ describe("PrintSection", () => {
       },
     });
     render(<PrintSection {...defaultProps} isFDM={true} store={store} />);
+    expect(screen.getByRole("textbox", { name: "calc.printTime" })).toHaveValue(
+      "2.5 h",
+    );
+    expect(screen.getByTestId("print-time-reading")).toHaveTextContent(
+      "= 2h 30min",
+    );
     const inputs = screen.getAllByRole("spinbutton");
-    expect(inputs[0]).toHaveValue(2.5);
-    expect(inputs[1]).toHaveValue(250);
-    expect(inputs[2]).toHaveValue(0.15);
+    expect(inputs[0]).toHaveValue(250);
+    expect(inputs[1]).toHaveValue(0.15);
   });
 
   it("displays resin print values when isFDM is false", () => {
