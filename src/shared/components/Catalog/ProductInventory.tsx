@@ -21,6 +21,7 @@ import {
 import type { Product, ProductStatus } from "@/shared/types";
 import { downloadBlob } from "@/shared/lib/download";
 import { formatWeight } from "@/shared/lib/format";
+import { formatPrintTime, parsePrintTime } from "@/shared/lib/printTime";
 import {
   PRODUCT_STATUSES,
   productStatus,
@@ -97,7 +98,9 @@ function ProductFormModal({
           name: product.name,
           link: product.link ?? "",
           status: productStatus(product),
-          printTimeHours: String(product.printTimeHours ?? ""),
+          printTimeHours: product.printTimeHours
+            ? formatPrintTime(product.printTimeHours)
+            : "",
           weightGrams: product.weightGrams ? String(product.weightGrams) : "",
           costPrice: String(product.costPrice),
           inPersonPrice: product.inPersonPrice
@@ -128,7 +131,8 @@ function ProductFormModal({
       name: form.name.trim(),
       link: form.link.trim(),
       status: form.status,
-      printTimeHours: toNumber(form.printTimeHours),
+      // Same MakerWorld-style input as the calculator ("5.3", "30 min").
+      printTimeHours: parsePrintTime(form.printTimeHours) ?? 0,
       weightGrams: toNumber(form.weightGrams),
       costPrice: cost,
       inPersonPrice: toNumber(form.inPersonPrice),
@@ -561,7 +565,9 @@ export function ProductInventory() {
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
-                      {p.printTimeHours ? `${p.printTimeHours} h` : "—"}
+                      {p.printTimeHours
+                        ? formatPrintTime(p.printTimeHours)
+                        : "—"}
                     </td>
                     <td className="py-2 pr-3 text-[var(--color-text-secondary)]">
                       {/* Same 1-decimal display as the calculator's Part Weight. */}

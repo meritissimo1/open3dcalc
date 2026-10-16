@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import { InputGroup } from "@/shared/components/ui/InputGroup";
 import { Select } from "@/shared/components/ui/Select";
+import { PrintTimeField } from "./PrintTimeField";
 import type { CalculatorState } from "@/shared/stores/calculatorStore";
 
 export interface PrintSectionProps {
@@ -45,30 +46,43 @@ export function PrintSection({
         t("calc.sectionDesc.print"),
       )}
       <div className="grid grid-cols-1 @form:grid-cols-2 gap-3">
-        <InputGroup
-          label={t("calc.printTime")}
-          value={
-            isFDM
-              ? store.fdmPrintParams.printTimeHours
-              : store.resinPrintParams.printTimeHours
-          }
-          onChange={(v) =>
-            handleInput(v, (val) =>
+        {isFDM ? (
+          <PrintTimeField
+            hours={store.fdmPrintParams.printTimeHours}
+            onChange={(printTimeHours) =>
+              store.setFdmPrintParams({
+                ...store.fdmPrintParams,
+                printTimeHours,
+              })
+            }
+            t={t}
+          />
+        ) : (
+          <InputGroup
+            label={t("calc.printTime")}
+            value={
               isFDM
-                ? store.setFdmPrintParams({
-                    ...store.fdmPrintParams,
-                    printTimeHours: val,
-                  })
-                : store.setResinPrintParams({
-                    ...store.resinPrintParams,
-                    printTimeHours: val,
-                  }),
-            )
-          }
-          type="number"
-          unit="h"
-          tooltip={t("tooltip.printTimeHours")}
-        />
+                ? store.fdmPrintParams.printTimeHours
+                : store.resinPrintParams.printTimeHours
+            }
+            onChange={(v) =>
+              handleInput(v, (val) =>
+                isFDM
+                  ? store.setFdmPrintParams({
+                      ...store.fdmPrintParams,
+                      printTimeHours: val,
+                    })
+                  : store.setResinPrintParams({
+                      ...store.resinPrintParams,
+                      printTimeHours: val,
+                    }),
+              )
+            }
+            type="number"
+            unit="h"
+            tooltip={t("tooltip.printTimeHours")}
+          />
+        )}
         <InputGroup
           label={t("calc.printerPower")}
           value={
